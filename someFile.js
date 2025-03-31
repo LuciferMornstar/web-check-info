@@ -1,0 +1,3 @@
+import { something } from "./contentScript/injected.js";import { something } from "./contentScript/injected.js";
+
+// ...existing code...

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Devil's Contact Finder - Stored Data</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+
+    :root {
+      --primary-color: #9c0505;
+      --secondary-color: #d8a43f;
+      --background-color: #0f0f0f;
+      --card-background: #1a1a1a;
+      --text-color: #f0f0f0;
+      --light-text: #bbbbbb;
+      --border-radius: 0;
+      --shadow: 0 2px 10px rgba(0,0,0,0.3);
+      --accent-color: #700000;
+      --success-color: #906c00;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'Montserrat', sans-serif;
+    }
+
+    body {
+      width: 800px;
+      padding: 30px;
+      font-family: var(--font-sans);
+      font-weight: 300;
+      margin: 0;
+      color: var(--text-color);
+      background-color: var(--background-color);
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      letter-spacing: 0.02em;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 30px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 15px;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      margin: 0;
+      font-weight: 500;
+      color: var(--text-color);
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      margin: 30px 0 15px;
+      font-weight: 500;
+      color: var(--secondary-color);
+      letter-spacing: 0;
+    }
+
+    .button {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background-color: transparent;
+      color: var(--text-color);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .button:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .button.primary {
+      background-color: transparent;
+      border: 1px solid var(--secondary-color);
+      color: var(--secondary-color);
+    }
+
+    .button.primary:hover {
+      background-color: var(--secondary-color);
+      color: #000;
+    }
+
+    .button.danger {
+      background-color: transparent;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .button.danger:hover {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+    }
+
+    .button:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+    }
+
+    .button.icon {
+      padding: 5px 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .accent-line {
+      width: 40px;
+      height: 1px;
+      background-color: var(--secondary-color);
+      margin: 20px 0;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      color: var(--text-color);
+    }
+
+    .devils-mark {
+      color: var(--primary-color);
+      margin-right: 8px;
+      font-size: 20px;
+    }
+
+    .section-divider {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    .divider-line {
+      flex-grow: 1;
+      height: 1px;
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .divider-text {
+      padding: 0 15px;
+      font-family: var(--font-serif);
+      font-size: 18px;
+      color: var(--light-text);
+    }
+
+    .navigation {
+      display: flex;
+      gap: 20px;
+    }
+
+    .navigation a {
+      color: var(--light-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.3s;
+      position: relative;
+    }
+
+    .navigation a:hover {
+      color: var(--secondary-color);
+    }
+
+    .navigation a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 1px;
+      bottom: -3px;
+      left: 0;
+      background-color: var(--secondary-color);
+      transition: width 0.3s;
+    }
+
+    .navigation a:hover::after {
+      width: 100%;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: var(--card-background);
+      color: var(--text-color);
+      padding: 12px 20px;
+      border-left: 3px solid var(--secondary-color);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    .sites-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .sites-table th {
+      text-align: left;
+      background-color: rgba(0, 0, 0, 0.3);
+      color: var(--text-color);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 15px;
+    }
+
+    .sites-table td {
+      padding: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sites-table tr:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .site-url {
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+    }
+
+    .scan-date {
+      color: var(--light-text);
+      font-size: 14px;
+    }
+
+    .counts {
+      display: flex;
+      gap: 15px;
+    }
+
+    .count-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .count-item span {
+      color: var(--secondary-color);
+      font-weight: 500;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: var(--light-text);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 20px 0;
+    }
+
+    .no-data p {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    /* Contact details styles */
+    .details-container {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 20px;
+      display: none;
+    }
+
+    .details-header {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .details-header h3 {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-weight: 500;
+      font-size: 18px;
+    }
+
+    .details-content {
+      padding: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .contact-card {
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .contact-field {
+      margin-bottom: 8px;
+    }
+
+    .contact-field-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--light-text);
+      margin-bottom: 3px;
+    }
+
+    .contact-field-value {
+      font-size: 15px;
+    }
+
+    .bulk-actions {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+
+    .search-container {
+      position: relative;
+      width: 300px;
+    }
+
+    .search-container input {
+      width: 100%;
+      padding: 10px 15px;
+      padding-left: 35px;
+      background-color: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-color);
+      font-family: var(--font-sans);
+      font-size: 14px;
+    }
+
+    .search-container input:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--light-text);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 5px;
+    }
+
+    .pagination button {
+      padding: 8px 12px;
+      background-color: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .pagination button:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .pagination button.active {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .pagination button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+      <span class="devils-mark">†</span>
+      <h1 class="logo">Stored Data</h1>
+    </div>
+    <div class="navigation">
+      <a href="popup.html">Home</a>
+      <a href="stored.html" style="color: var(--secondary-color);">Stored Data</a>
+      <a href="settings.html">Settings</a>
+    </div>
+  </div>
+
+  <div class="bulk-actions">
+    <div class="search-container">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchBox" placeholder="Search by domain...">
+    </div>
+
+    <div>
+      <button id="exportAllButton" class="button primary">Export All</button>
+      <button id="clearAllButton" class="button danger">Clear All Data</button>
+    </div>
+  </div>
+
+  <div id="sitesContainer">
+    <!-- Site data will be loaded here -->
+    <div class="no-data" id="noDataMessage">
+      <div>No stored scan data found</div>
+      <p>Complete a scan on any website to store contact information</p>
+    </div>
+  </div>
+
+  <div id="paginationContainer" class="pagination">
+    <!-- Pagination controls will be added here -->
+  </div>
+
+  <div id="detailsContainer" class="details-container">
+    <div class="details-header">
+      <h3 id="detailsTitle">Contact Details</h3>
+      <button id="closeDetails" class="button icon">✕</button>
+    </div>
+    <div id="detailsContent" class="details-content">
+      <!-- Contact details will be shown here -->
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Operation completed successfully!</div>
+
+  <script src="stored.js" type="module"></script>
+</body>
+</html>
