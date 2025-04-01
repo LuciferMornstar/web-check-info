@@ -13,7 +13,7 @@ let autoStopTimeout = null;
 
 // Listen for extension installation
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Web Contact Finder extension installed.');
+  console.log("Web Check extension installed.");
   // Initialize storage
   chrome.storage.local.set({
     scanResults: {},

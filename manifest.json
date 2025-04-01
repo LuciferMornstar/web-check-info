@@ -1,18 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Web Contact Finder",
+  "name": "Web Check",
   "version": "1.0",
-  "description": "Finds contact information on the active website when invoked.",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage"
-  ],
-  "optional_host_permissions": [
-    "<all_urls>"
-  ],
+  "description": "A web app to scan websites for contact information.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "index.html",
     "default_icon": {
       "16": "images/icon_16.png",
       "48": "images/icon_48.png",
@@ -23,17 +20,6 @@
     "16": "images/icon_16.png",
     "48": "images/icon_48.png",
     "128": "images/icon_128.png"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "contentScript/injected.js"
-      ],
-      "matches": [ "*://*/*" ]
-    }
-  ]
+  }
 }
 

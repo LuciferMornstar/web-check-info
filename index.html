@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Check</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <h1>Web Check</h1>
+    <input type="text" id="websiteInput" placeholder="Enter website URL">
+    <button id="scanButton">Scan</button>
+    <button id="stopButton" disabled>Stop</button>
+    <button id="clearButton">Clear</button>
+    <button id="exportButton">Export</button>
+    <div id="statusLabel"></div>
+    <div id="progressBar"></div>
+    <div id="emailCount"></div>
+    <div id="phoneCount"></div>
+    <div id="nameCount"></div>
+    <table id="contactsTable"></table>
+    <div id="contactPageContainer">
+      <div id="contactPageInfo"></div>
+    </div>
+    <div id="debugInfo"></div>
+    <input type="range" id="fontSizeSlider" min="10" max="20" value="14">
+  </div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

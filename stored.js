@@ -38,48 +38,46 @@ document.addEventListener('DOMContentLoaded', function() {
   if (homeLink) {
     homeLink.addEventListener('click', function(event) {
       event.preventDefault();
-      chrome.runtime.openOptionsPage();
+      window.location.href = 'popup.html';
     });
   }
 
   // Function to load all saved scans
   function loadAllScans() {
-    chrome.storage.local.get('scanResults', function(data) {
-      const results = data.scanResults || {};
+    const stored = JSON.parse(localStorage.getItem('scanResults')) || {};
+    
+    if (Object.keys(stored).length === 0) {
+      noDataMessage.style.display = 'block';
+      sitesContainer.innerHTML = '';
+      paginationContainer.innerHTML = '';
+      return;
+    }
+    
+    // Convert object to array for easier filtering and sorting
+    allScans = Object.keys(stored).map(url => {
+      const scan = stored[url];
+      const domain = extractDomain(url);
+      const contactCount = scan.structuredContacts?.length || 0;
+      const emailCount = scan.rawContacts?.emails?.length || 0;
+      const phoneCount = scan.rawContacts?.phones?.length || 0;
       
-      if (Object.keys(results).length === 0) {
-        noDataMessage.style.display = 'block';
-        sitesContainer.innerHTML = '';
-        paginationContainer.innerHTML = '';
-        return;
-      }
-      
-      // Convert object to array for easier filtering and sorting
-      allScans = Object.keys(results).map(url => {
-        const scan = results[url];
-        const domain = extractDomain(url);
-        const contactCount = scan.structuredContacts?.length || 0;
-        const emailCount = scan.rawContacts?.emails?.length || 0;
-        const phoneCount = scan.rawContacts?.phones?.length || 0;
-        
-        return {
-          url: url,
-          domain: domain,
-          timestamp: scan.timestamp || Date.now(),
-          contactCount: contactCount,
-          emailCount: emailCount,
-          phoneCount: phoneCount,
-          structuredContacts: scan.structuredContacts || [],
-          rawContacts: scan.rawContacts || { emails: [], phones: [], names: [] }
-        };
-      });
-      
-      // Sort by timestamp (newest first)
-      allScans.sort((a, b) => b.timestamp - a.timestamp);
-      
-      filteredScans = [...allScans];
-      displayScans(filteredScans);
+      return {
+        url: url,
+        domain: domain,
+        timestamp: scan.timestamp || Date.now(),
+        contactCount: contactCount,
+        emailCount: emailCount,
+        phoneCount: phoneCount,
+        structuredContacts: scan.structuredContacts || [],
+        rawContacts: scan.rawContacts || { emails: [], phones: [], names: [] }
+      };
     });
+    
+    // Sort by timestamp (newest first)
+    allScans.sort((a, b) => b.timestamp - a.timestamp);
+    
+    filteredScans = [...allScans];
+    displayScans(filteredScans);
   }
 
   // Function to display scans with pagination
@@ -183,7 +181,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.deleteScan = function(encodedUrl) {
       const url = decodeURIComponent(encodedUrl);
-      removeScan(url);
+      if (confirm('Are you sure you want to delete this scan?')) {
+        const stored = JSON.parse(localStorage.getItem('scanResults')) || {};
+        if (stored[url]) {
+          delete stored[url];
+          localStorage.setItem('scanResults', JSON.stringify(stored));
+          loadAllScans();
+          showToast('Scan deleted successfully!');
+        }
+      }
     };
     
     window.changePage = function(pageNum) {
@@ -255,12 +261,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // Function to clear all data
   function clearAllData() {
     if (confirm('Are you sure you want to delete all stored scan results? This action cannot be undone.')) {
-      chrome.storage.local.set({ scanResults: {} }, function() {
-        allScans = [];
-        filteredScans = [];
-        displayScans(filteredScans);
-        showToast('All scan data cleared successfully!');
-      });
+      localStorage.setItem('scanResults', JSON.stringify({}));
+      allScans = [];
+      filteredScans = [];
+      displayScans(filteredScans);
+      showToast('All scan data cleared successfully!');
     }
   }
 
@@ -323,24 +328,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.removeChild(link);
     
     showToast('Contacts exported successfully!');
-  }
-
-  // Function to remove a single scan
-  function removeScan(url) {
-    if (confirm('Are you sure you want to delete this scan?')) {
-      chrome.storage.local.get('scanResults', function(data) {
-        const results = data.scanResults || {};
-        
-        if (results[url]) {
-          delete results[url];
-          chrome.storage.local.set({ scanResults: results }, function() {
-            // Reload data after deletion
-            loadAllScans();
-            showToast('Scan deleted successfully!');
-          });
-        }
-      });
-    }
   }
 
   // Helper function to extract domain from URL

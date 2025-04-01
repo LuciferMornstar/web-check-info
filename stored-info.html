@@ -310,9 +310,9 @@
   </div>
 
   <div class="navigation">
-    <a href="popup.html" class="nav-link">Home</a>
-    <a href="stored.html" class="nav-link">Stored Data</a>
-    <a href="settings.html" class="nav-link">Settings</a>
+    <a href="popup.html" class="nav-link" id="homeLink">Home</a>
+    <a href="stored.html" class="nav-link" id="storedLink">Stored Data</a>
+    <a href="settings.html" class="nav-link" id="settingsLink">Settings</a>
   </div>
 
   <div class="section-divider">
@@ -341,94 +341,90 @@
       const emptyState = document.getElementById('emptyState');
       const toast = document.getElementById('toast');
 
+      // Remove chrome.runtime.openOptionsPage, use window.location for navigation instead
+      document.getElementById('homeLink').addEventListener('click', function(event) {
+        event.preventDefault();
+        window.location.href = 'popup.html';
+      });
+      document.getElementById('settingsLink').addEventListener('click', function(event) {
+        event.preventDefault();
+        window.location.href = 'settings.html';
+      });
+
       // Load up to 5 most recent scans
       loadRecentScans();
 
-      // Add click handler for the home link
-      const homeLink = document.querySelector('a[href="popup.html"]');
-      if (homeLink) {
-        homeLink.addEventListener('click', function(event) {
-          event.preventDefault();
-          chrome.runtime.openOptionsPage();
-        });
-      }
-
       function loadRecentScans() {
-        chrome.storage.local.get('scanResults', function(data) {
-          const results = data.scanResults || {};
+        const data = JSON.parse(localStorage.getItem('scanResults')) || {};
+        
+        if (Object.keys(data).length === 0) {
+          emptyState.style.display = 'block';
+          return;
+        }
+        
+        // Convert to array and sort by timestamp
+        const scans = Object.keys(data).map(url => {
+          const scan = data[url];
+          return {
+            url: url,
+            domain: extractDomain(url),
+            timestamp: scan.timestamp || Date.now(),
+            contactCount: scan.structuredContacts?.length || 0,
+            emailCount: scan.rawContacts?.emails?.length || 0,
+            phoneCount: scan.rawContacts?.phones?.length || 0
+          };
+        }).sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Take only up to 5 most recent scans
+        const recentScans = scans.slice(0, 5);
+        
+        if (recentScans.length > 0) {
+          emptyState.style.display = 'none';
+          historyList.innerHTML = '';
           
-          if (Object.keys(results).length === 0) {
-            emptyState.style.display = 'block';
-            return;
-          }
-          
-          // Convert to array and sort by timestamp
-          const scans = Object.keys(results).map(url => {
-            const scan = results[url];
-            return {
-              url: url,
-              domain: extractDomain(url),
-              timestamp: scan.timestamp || Date.now(),
-              contactCount: scan.structuredContacts?.length || 0,
-              emailCount: scan.rawContacts?.emails?.length || 0,
-              phoneCount: scan.rawContacts?.phones?.length || 0
-            };
-          }).sort((a, b) => b.timestamp - a.timestamp);
-          
-          // Take only up to 5 most recent scans
-          const recentScans = scans.slice(0, 5);
-          
-          if (recentScans.length > 0) {
-            emptyState.style.display = 'none';
-            historyList.innerHTML = '';
+          recentScans.forEach(scan => {
+            const date = new Date(scan.timestamp);
+            const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
             
-            recentScans.forEach(scan => {
-              const date = new Date(scan.timestamp);
-              const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-              
-              const historyItem = document.createElement('div');
-              historyItem.className = 'history-item';
-              historyItem.innerHTML = `
-                <div class="history-domain">${scan.domain}</div>
-                <div class="history-date">${formattedDate}</div>
-                <div class="history-counts">
-                  <div class="history-count">Emails: <span>${scan.emailCount}</span></div>
-                  <div class="history-count">Phones: <span>${scan.phoneCount}</span></div>
-                  <div class="history-count">Contacts: <span>${scan.contactCount}</span></div>
-                </div>
-                <div class="history-actions">
-                  <button class="history-button" onclick="deleteScan('${encodeURIComponent(scan.url)}')">Delete</button>
-                  <button class="history-button" onclick="viewDetails('${encodeURIComponent(scan.url)}')">View</button>
-                </div>
-              `;
-              
-              historyList.appendChild(historyItem);
-            });
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+              <div class="history-domain">${scan.domain}</div>
+              <div class="history-date">${formattedDate}</div>
+              <div class="history-counts">
+                <div class="history-count">Emails: <span>${scan.emailCount}</span></div>
+                <div class="history-count">Phones: <span>${scan.phoneCount}</span></div>
+                <div class="history-count">Contacts: <span>${scan.contactCount}</span></div>
+              </div>
+              <div class="history-actions">
+                <button class="history-button" onclick="deleteScan('${encodeURIComponent(scan.url)}')">Delete</button>
+                <button class="history-button" onclick="viewDetails('${encodeURIComponent(scan.url)}')">View</button>
+              </div>
+            `;
             
-            // Set up global functions for button actions
-            window.deleteScan = function(encodedUrl) {
-              const url = decodeURIComponent(encodedUrl);
-              if (confirm('Are you sure you want to delete this scan?')) {
-                chrome.storage.local.get('scanResults', function(data) {
-                  const results = data.scanResults || {};
-                  
-                  if (results[url]) {
-                    delete results[url];
-                    chrome.storage.local.set({ scanResults: results }, function() {
-                      loadRecentScans();
-                      showToast('Scan deleted successfully!');
-                    });
-                  }
-                });
+            historyList.appendChild(historyItem);
+          });
+          
+          // Set up global functions for button actions
+          window.deleteScan = function(encodedUrl) {
+            const url = decodeURIComponent(encodedUrl);
+            if (confirm('Are you sure you want to delete this scan?')) {
+              const results = JSON.parse(localStorage.getItem('scanResults')) || {};
+              
+              if (results[url]) {
+                delete results[url];
+                localStorage.setItem('scanResults', JSON.stringify(results));
+                loadRecentScans();
+                showToast('Scan deleted successfully!');
               }
-            };
-            
-            window.viewDetails = function(encodedUrl) {
-              // Navigate to stored.html with URL parameter
-              chrome.tabs.create({ url: `stored.html?url=${encodedUrl}` });
-            };
-          }
-        });
+            }
+          };
+          
+          window.viewDetails = function(encodedUrl) {
+            // Navigate to stored.html with URL parameter
+            window.location.href = `stored.html?url=${encodedUrl}`;
+          };
+        }
       }
 
       // Helper function to extract domain from URL
