@@ -14,17 +14,36 @@
     <button id="stopButton" disabled>Stop</button>
     <button id="clearButton">Clear</button>
     <button id="exportButton">Export</button>
+    <div id="pageStatus"></div>
+    <div id="debugBox"></div>
     <div id="statusLabel"></div>
     <div id="progressBar"></div>
     <div id="emailCount"></div>
     <div id="phoneCount"></div>
     <div id="nameCount"></div>
-    <table id="contactsTable"></table>
+    <table id="contactsTable">
+      <tr>
+        <td colspan="3" class="empty-state">
+          <div>No contacts found</div>
+          <p>Try scanning more pages on this website</p>
+        </td>
+      </tr>
+    </table>
     <div id="contactPageContainer">
       <div id="contactPageInfo"></div>
     </div>
     <div id="debugInfo"></div>
     <input type="range" id="fontSizeSlider" min="10" max="20" value="14">
+    <label for="ignoreRobotsToggle">Ignore robots.txt:</label>
+    <input type="checkbox" id="ignoreRobotsToggle">
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeErrorModal">&times;</span>
+        <p id="errorDetails">Error details will be displayed here.</p>
+      </div>
+    </div>
   </div>
   <script type="module" src="popup.js"></script>
 </body>
