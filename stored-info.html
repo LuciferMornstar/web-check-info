@@ -90,10 +90,26 @@
       letter-spacing: 0.1em;
       margin-left: 15px;
       transition: color 0.3s ease;
+      position: relative;
     }
     
     .nav-link:hover {
       color: var(--secondary-color);
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 2px;
+      background: var(--secondary-color);
+      left: 0;
+      bottom: -2px;
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
     }
 
     .section-divider {
@@ -162,6 +178,12 @@
       border: 1px solid rgba(255,255,255,0.1);
       padding: 15px;
       margin-bottom: 10px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .history-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
     }
 
     .history-domain {

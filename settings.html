@@ -35,6 +35,13 @@
       overflow: auto;
       min-width: 300px;
       min-height: 200px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .settings-container:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
     }
 
     input, select, textarea {
@@ -52,6 +59,7 @@
     input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--secondary-color);
+      box-shadow: 0 0 8px var(--secondary-color);
     }
   </style>
 </head>

@@ -116,6 +116,12 @@
       box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
     }
 
+    /* NEW: Additional effects inspired by joshuas-world */
+    .scan-button:hover, .action-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+    }
+
     .progress-container {
       background-color: rgba(255,255,255,0.1);
       height: 4px;
@@ -543,10 +549,26 @@
       letter-spacing: 0.1em;
       margin-left: 10px;
       transition: color 0.3s ease;
+      position: relative;
+    }
+    
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 2px;
+      background: var(--secondary-color);
+      left: 0;
+      bottom: -3px;
+      transition: width 0.3s ease;
     }
     
     .nav-link:hover {
       color: var(--secondary-color);
+    }
+    
+    .nav-link:hover::after {
+      width: 100%;
     }
 
     /* Responsive design */
