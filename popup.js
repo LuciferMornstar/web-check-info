@@ -382,4 +382,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     // NEW: Apply the initial slider value immediately
     fontSizeSlider.dispatchEvent(new Event('input'));
   }
+
+  // NEW: Populate open tabs dropdown
+  function populateOpenTabs() {
+    chrome.tabs.query({ currentWindow: true }, function(tabs) {
+      const select = document.getElementById('openTabsSelect');
+      // Clear previous options except the first placeholder
+      select.innerHTML = '<option value="">-- Select open tab --</option>';
+      tabs.forEach(tab => {
+        if (tab.url && tab.url.startsWith('http')) {
+          const option = document.createElement('option');
+          option.value = tab.url;
+          option.textContent = tab.title || tab.url;
+          select.appendChild(option);
+        }
+      });
+    });
+  }
+  populateOpenTabs();
+  // Refresh dropdown every 30 seconds
+  setInterval(populateOpenTabs, 30000);
+
+  // NEW: Update websiteInput when the dropdown changes
+  document.getElementById('openTabsSelect').addEventListener('change', function() {
+    const selectedUrl = this.value;
+    if (selectedUrl) {
+      document.getElementById('websiteInput').value = selectedUrl;
+    }
+  });
 });
