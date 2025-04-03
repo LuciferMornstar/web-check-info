@@ -1,5 +1,10 @@
 const EXTENSION_ID = "jngdjadfpacgipaieakjnpnfjalnfbjh";
+import Amplify from 'aws-amplify';
+import awsExports from './aws-exports';
+Amplify.configure(awsExports);
+import { API, graphqlOperation } from 'aws-amplify'; // <-- NEW: Added missing API and graphqlOperation import
 import { crawlWebsite, crawlEntireSite } from './utils/crawlUtils.js';
+import { createScanResult } from './graphql/mutations';
 
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('Popup initialized');
@@ -118,8 +123,24 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Set initial state: stop button disabled by default
   updateButtonStates(false);
 
+  async function saveScanResult(url, contacts) {
+    try {
+      const input = {
+        url,
+        domain: new URL(url).hostname,
+        timestamp: Date.now(),
+        contactCount: contacts.length,
+        structuredContacts: contacts,
+      };
+      await API.graphql(graphqlOperation(createScanResult, { input }));
+      console.log('Scan result saved successfully!');
+    } catch (error) {
+      console.error('Error saving scan result:', error);
+    }
+  }
+
   // Replace the scan button event listener with web app version:
-  scanButton.addEventListener('click', function() {
+  scanButton.addEventListener('click', async function() {
     const inputUrl = document.getElementById('websiteInput').value.trim();
     if (!inputUrl) {
         alert("Please enter a website address.");
@@ -135,36 +156,30 @@ document.addEventListener('DOMContentLoaded', async function() {
       "This may violate website terms of service and could lead to blocking."
     );
     
-    // Directly call crawlWebsite (which uses fetch) and then save to localStorage
-    crawlWebsite({ url: targetUrl, netnutApiKey: '', bypassAntiBot: bypassConfirmation })
-      .then(result => {
-        console.log("crawlWebsite result:", result);
-        displayContacts(result.contacts);
-        if (result.contactBlocks && result.contactBlocks.length > 0) {
-          displayContactPageInfo(result.contactBlocks);
-        } else {
-          displayContactPageInfo([]);
-        }
-        emailCount.textContent = result.emails?.length || 0;
-        phoneCount.textContent = result.phonesFound?.length || 0;
-        nameCount.textContent = result.names?.length || 0;
-        statusLabel.textContent = 'Contacts page scan complete!';
-        debugInfo.textContent = 'Contacts page scan complete!';
-        
-        // Save scan to localStorage
-        let results = JSON.parse(localStorage.getItem('scanResults')) || {};
-        results[targetUrl] = { structuredContacts: result.contacts, timestamp: Date.now() };
-        localStorage.setItem('scanResults', JSON.stringify(results));
-      })
-      .catch(error => {
-        console.error("Error during contacts page scan:", error);
-        handleError(error.message);
-        statusLabel.textContent = 'Error scanning contacts page';
-        debugInfo.textContent = `Error: ${error.message}`;
-      })
-      .finally(() => {
-        updateButtonStates(false);
-      });
+    try {
+      const result = await crawlWebsite({ url: targetUrl, netnutApiKey: '', bypassAntiBot: bypassConfirmation });
+      console.log("crawlWebsite result:", result);
+      displayContacts(result.contacts);
+      if (result.contactBlocks && result.contactBlocks.length > 0) {
+        displayContactPageInfo(result.contactBlocks);
+      } else {
+        displayContactPageInfo([]);
+      }
+      emailCount.textContent = result.emails?.length || 0;
+      phoneCount.textContent = result.phonesFound?.length || 0;
+      nameCount.textContent = result.names?.length || 0;
+      statusLabel.textContent = 'Contacts page scan complete!';
+      debugInfo.textContent = 'Contacts page scan complete!';
+      
+      await saveScanResult(targetUrl, result.contacts);
+    } catch (error) {
+      console.error("Error during contacts page scan:", error);
+      handleError(error.message);
+      statusLabel.textContent = 'Error scanning contacts page';
+      debugInfo.textContent = `Error: ${error.message}`;
+    } finally {
+      updateButtonStates(false);
+    }
   });
 
   stopButton.addEventListener('click', function() {

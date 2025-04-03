@@ -1,3 +1,8 @@
+import Amplify from 'aws-amplify';
+// Dynamically import the correct aws-exports file
+import awsExports from './aws-exports';
+Amplify.configure(awsExports);
+
 document.addEventListener('DOMContentLoaded', function() {
   const maxPagesInput = document.getElementById('maxPages');
   const crawlDelayInput = document.getElementById('crawlDelay');

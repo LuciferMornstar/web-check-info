@@ -1,0 +1,14 @@
+type ScanResult @model {
+  id: ID!
+  url: String!
+  domain: String!
+  timestamp: AWSDateTime!
+  contactCount: Int!
+  structuredContacts: [Contact]!
+}
+
+type Contact {
+  name: String
+  email: String
+  phone: String
+}

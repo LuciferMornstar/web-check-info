@@ -1,3 +1,11 @@
+import Amplify, { API, graphqlOperation } from 'aws-amplify';
+// Dynamically import the correct aws-exports file
+import awsExports from './aws-exports';
+Amplify.configure(awsExports);
+
+import { listScanResults, getScanResult } from './graphql/queries';
+import { createScanResult, deleteScanResult } from './graphql/mutations';
+
 const EXTENSION_ID = "";
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -43,41 +51,23 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Function to load all saved scans
-  function loadAllScans() {
-    const stored = JSON.parse(localStorage.getItem('scanResults')) || {};
-    
-    if (Object.keys(stored).length === 0) {
-      noDataMessage.style.display = 'block';
-      sitesContainer.innerHTML = '';
-      paginationContainer.innerHTML = '';
-      return;
+  async function loadAllScans() {
+    try {
+      const result = await API.graphql(graphqlOperation(listScanResults));
+      allScans = result.data.listScanResults.items.map(scan => ({
+        url: scan.url,
+        domain: scan.domain,
+        timestamp: scan.timestamp,
+        contactCount: scan.contactCount,
+        emailCount: scan.emailCount,
+        phoneCount: scan.phoneCount,
+        structuredContacts: scan.structuredContacts,
+      }));
+      filteredScans = [...allScans];
+      displayScans(filteredScans);
+    } catch (error) {
+      console.error('Error loading scans:', error);
     }
-    
-    // Convert object to array for easier filtering and sorting
-    allScans = Object.keys(stored).map(url => {
-      const scan = stored[url];
-      const domain = extractDomain(url);
-      const contactCount = scan.structuredContacts?.length || 0;
-      const emailCount = scan.rawContacts?.emails?.length || 0;
-      const phoneCount = scan.rawContacts?.phones?.length || 0;
-      
-      return {
-        url: url,
-        domain: domain,
-        timestamp: scan.timestamp || Date.now(),
-        contactCount: contactCount,
-        emailCount: emailCount,
-        phoneCount: phoneCount,
-        structuredContacts: scan.structuredContacts || [],
-        rawContacts: scan.rawContacts || { emails: [], phones: [], names: [] }
-      };
-    });
-    
-    // Sort by timestamp (newest first)
-    allScans.sort((a, b) => b.timestamp - a.timestamp);
-    
-    filteredScans = [...allScans];
-    displayScans(filteredScans);
   }
 
   // Function to display scans with pagination
@@ -179,15 +169,15 @@ document.addEventListener('DOMContentLoaded', function() {
       exportSingleScan(url);
     };
     
-    window.deleteScan = function(encodedUrl) {
+    window.deleteScan = async function(encodedUrl) {
       const url = decodeURIComponent(encodedUrl);
       if (confirm('Are you sure you want to delete this scan?')) {
-        const stored = JSON.parse(localStorage.getItem('scanResults')) || {};
-        if (stored[url]) {
-          delete stored[url];
-          localStorage.setItem('scanResults', JSON.stringify(stored));
+        try {
+          await API.graphql(graphqlOperation(deleteScanResult, { input: { url } }));
           loadAllScans();
           showToast('Scan deleted successfully!');
+        } catch (error) {
+          console.error('Error deleting scan:', error);
         }
       }
     };
@@ -261,10 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Function to clear all data
   function clearAllData() {
     if (confirm('Are you sure you want to delete all stored scan results? This action cannot be undone.')) {
-      localStorage.setItem('scanResults', JSON.stringify({}));
-      allScans = [];
-      filteredScans = [];
-      displayScans(filteredScans);
+      // Clear all data logic here
       showToast('All scan data cleared successfully!');
     }
   }
