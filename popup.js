@@ -404,4 +404,16 @@ document.addEventListener('DOMContentLoaded', async function() {
       websiteInput.value = selectedUrl;
     }
   });
+
+  // NEW: Update websiteInput when the import button is clicked
+  document.getElementById('importTabButton').addEventListener('click', function() {
+    const select = document.getElementById('openTabsSelect');
+    const selectedUrl = select.value;
+    if (selectedUrl) {
+      websiteInput.value = selectedUrl;
+      updatePageStatus();
+    } else {
+      alert("Please select an open tab from the dropdown.");
+    }
+  });
 });
