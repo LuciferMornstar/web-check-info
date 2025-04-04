@@ -406,6 +406,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const selectedUrl = this.value;
     if (selectedUrl) {
       websiteInput.value = selectedUrl;
+      updatePageStatus();
     }
   });
 
