@@ -180,7 +180,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   stopButton.addEventListener('click', function() {
     console.log('Stop button clicked');
     statusLabel.textContent = 'Stopping scan...';
-    updateButtonStates(false); // Disable scanning UI immediately
+    // NEW: Send message to content script to stop scanning
+    chrome.runtime.sendMessage({ action: 'stopScan' }, function(response) {
+        console.log('Stop scan response:', response);
+    });
+    updateButtonStates(false);
   });
 
   clearButton.addEventListener('click', clearContacts);
