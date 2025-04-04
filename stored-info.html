@@ -3,11 +3,12 @@
 <head>
   <title>Devil's Contact Finder - History</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&family=Poppins:wght@300;400;700&display=swap');
 
     :root {
       --primary-color: #9c0505;
       --secondary-color: #d8a43f;
+      --background: linear-gradient(135deg, #231557, #44107a, #ff1361);
       --background-color: #0f0f0f;
       --card-background: #1a1a1a;
       --text-color: #f0f0f0;
@@ -17,12 +18,12 @@
       --accent-color: #700000;
       --success-color: #906c00;
       --font-serif: 'Cormorant Garamond', Georgia, serif;
-      --font-sans: 'Montserrat', sans-serif;
+      --font-sans: 'Poppins', sans-serif;
     }
 
     body {
-      background: linear-gradient(135deg, #231557, #44107a, #ff1361);
-      font-family: 'Poppins', sans-serif;
+      background: var(--background);
+      font-family: var(--font-sans);
       transition: background 0.5s ease;
       width: 450px;
       padding: 25px;
@@ -321,6 +322,13 @@
       .contact-card {
         width: 100%;
       }
+      body {
+        width: 100%;
+        padding: 10px;
+      }
+      .navigation a {
+        font-size: 12px;
+      }
     }
   </style>
 </head>
@@ -333,9 +341,9 @@
   </div>
 
   <div class="navigation">
-    <a href="popup.html" class="nav-link" id="homeLink">Home</a>
-    <a href="stored.html" class="nav-link" id="storedLink">Stored Data</a>
-    <a href="settings.html" class="nav-link" id="settingsLink">Settings</a>
+    <a href="popup.html" class="nav-link" id="homeLink" aria-label="Navigate to Home">Home</a>
+    <a href="stored.html" class="nav-link" id="storedLink" aria-label="Navigate to Stored Data">Stored Data</a>
+    <a href="settings.html" class="nav-link" id="settingsLink" aria-label="Navigate to Settings">Settings</a>
   </div>
 
   <div class="section-divider">

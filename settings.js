@@ -3,7 +3,7 @@ import Amplify from 'aws-amplify';
 import awsExports from './aws-exports';
 Amplify.configure(awsExports);
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   const maxPagesInput = document.getElementById('maxPages');
   const crawlDelayInput = document.getElementById('crawlDelay');
   const ignoreRobotsToggle = document.getElementById('ignoreRobots');
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     theme: 'dark'
   };
 
-  function loadSettings() {
+  async function loadSettings() {
     try {
       const settings = JSON.parse(localStorage.getItem('settings')) || defaultSettings;
       maxPagesInput.value = settings.maxPages || defaultSettings.maxPages;
@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ignoreRobotsToggle.checked = settings.ignoreRobots !== undefined ? settings.ignoreRobots : defaultSettings.ignoreRobots;
       themeSelect.value = settings.theme || defaultSettings.theme;
       document.documentElement.setAttribute('data-theme', settings.theme || defaultSettings.theme);
+      console.log("Settings loaded:", settings);
     } catch (error) {
       console.error('Error loading settings:', error);
       maxPagesInput.value = defaultSettings.maxPages;
@@ -33,17 +34,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function saveSettings() {
+  async function saveSettings() {
     try {
+      const maxPages = parseInt(maxPagesInput.value, 10);
+      const crawlDelay = parseInt(crawlDelayInput.value, 10);
+      if (isNaN(maxPages) || isNaN(crawlDelay)) throw new Error("Invalid number entered.");
       const settings = {
-        maxPages: parseInt(maxPagesInput.value, 10),
-        crawlDelay: parseInt(crawlDelayInput.value, 10),
+        maxPages,
+        crawlDelay,
         ignoreRobots: ignoreRobotsToggle.checked,
         theme: themeSelect.value
       };
       localStorage.setItem('settings', JSON.stringify(settings));
       showToast('Settings saved successfully!');
       document.documentElement.setAttribute('data-theme', settings.theme);
+      console.log("Settings saved:", settings);
     } catch (error) {
       console.error('Error saving settings:', error);
       showToast('Failed to save settings!');
@@ -61,5 +66,5 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
   }
 
-  loadSettings();
+  await loadSettings();
 });

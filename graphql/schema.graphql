@@ -4,6 +4,8 @@ type ScanResult @model {
   domain: String!
   timestamp: AWSDateTime!
   contactCount: Int!
+  emailCount: Int
+  phoneCount: Int
   structuredContacts: [Contact]!
 }
 

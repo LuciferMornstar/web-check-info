@@ -2,14 +2,11 @@
 import { formatPhoneNumber, extractPhoneExtension } from '../contactRules.js';
 
 export const patterns = {
-  // Enhanced name pattern to detect professional titles and longer names
-  name: /(?:(?:Dr|Prof|Professor|Mr|Mrs|Ms|Miss|Sir|Dame|Revd|Rev|Hon|Lady)\s+)?(?:[A-Z][a-z]{1,20}(?:\s+[A-Z][a-z]{1,20}){1,3})/g,
+  // Maximum change: allow extended international names and titles
+  name: /(?:(?:Dr|Prof|Professor|Mr|Mrs|Ms|Miss|Sir|Dame|Revd|Rev|Hon|Lady)\s+)?(?:[A-Z][a-z]{1,20}(?:\s+[A-Z][a-z]{1,20}){1,4})/g,
   email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
-  // Enhanced phone pattern to better detect various formats including explicit extensions
   phone: /(?:\+?(?:1|44|33|49|61|7|8[01]|9[0-9]|[2-9])\s?)?(?:\(?\d{3,4}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}(?:(?:\s?(?:x|ext|extension)[\s.]?)?\d{1,5})?/gi,
-  // Specialty pattern
   specialty: /(?:Specialty|Speciality|Practice):\s*([A-Za-z\s&]+)/gi,
-  // Location pattern
   location: /(?:Location|Address|Hospital|Office):\s*([A-Za-z0-9\s,.'&-]+)/gi
 };
 

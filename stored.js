@@ -8,7 +8,7 @@ import { createScanResult, deleteScanResult } from './graphql/mutations';
 
 const EXTENSION_ID = "";
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   console.log('Stored data page initialized');
 
   // Get references to page elements
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const itemsPerPage = 10;
 
   // Load all stored scan data
-  loadAllScans();
+  await loadAllScans();
 
   // Add event listeners
   searchBox.addEventListener('input', handleSearch);
@@ -59,12 +59,13 @@ document.addEventListener('DOMContentLoaded', function() {
         domain: scan.domain,
         timestamp: scan.timestamp,
         contactCount: scan.contactCount,
-        emailCount: scan.emailCount,
-        phoneCount: scan.phoneCount,
+        emailCount: scan.emailCount || 0,
+        phoneCount: scan.phoneCount || 0,
         structuredContacts: scan.structuredContacts,
       }));
       filteredScans = [...allScans];
       displayScans(filteredScans);
+      console.log("Loaded scans:", allScans);
     } catch (error) {
       console.error('Error loading scans:', error);
     }
@@ -122,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </td>
           <td class="actions">
-            <button class="button" onclick="viewContacts('${encodeURIComponent(scan.url)}')">View</button>
+            <button class="button" onclick="viewDetails('${encodeURIComponent(scan.url)}')">View</button>
             <button class="button" onclick="exportScan('${encodeURIComponent(scan.url)}')">Export</button>
             <button class="button" onclick="deleteScan('${encodeURIComponent(scan.url)}')">Delete</button>
           </td>
@@ -159,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Set up global functions for table buttons
-    window.viewContacts = function(encodedUrl) {
+    window.viewDetails = function(encodedUrl) {
       const url = decodeURIComponent(encodedUrl);
       showContactDetails(url);
     };
@@ -174,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (confirm('Are you sure you want to delete this scan?')) {
         try {
           await API.graphql(graphqlOperation(deleteScanResult, { input: { url } }));
-          loadAllScans();
+          await loadAllScans();
           showToast('Scan deleted successfully!');
         } catch (error) {
           console.error('Error deleting scan:', error);

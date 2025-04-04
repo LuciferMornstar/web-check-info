@@ -9,8 +9,13 @@ const awsmobile = {
   "aws_cognito_region": "us-east-1",
   "aws_user_pools_id": "us-east-1_xxxxxxx",
   "aws_user_pools_web_client_id": "xxxxxxxxxxxxxxxxxxxxxxxxxx",
-  "aws_account_id": "693490816013",  // NEW: Added your AWS account number
-  "aws_iam_signin_url": "https://693490816013.signin.aws.amazon.com/console"  // NEW: Sign-in URL for IAM users in this account
+  "aws_account_id": "693490816013",  // AWS account number
+  "aws_iam_signin_url": "https://693490816013.signin.aws.amazon.com/console",
+  // Maximum change: added custom configuration override
+  "customConfig": {
+      "retryAttempts": 3,
+      "timeout": 15000
+  }
 };
 
 export default awsmobile;

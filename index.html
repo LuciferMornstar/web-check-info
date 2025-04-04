@@ -7,14 +7,14 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="app">
+  <main id="app" role="main">
     <h1>Web Check</h1>
-    <input type="text" id="websiteInput" placeholder="Enter website URL">
-    <button id="scanButton">Scan</button>
-    <button id="stopButton" disabled>Stop</button>
-    <button id="clearButton">Clear</button>
-    <button id="exportButton">Export</button>
-    <div id="pageStatus"></div>
+    <input type="url" id="websiteInput" placeholder="Enter website URL" aria-label="Website URL">
+    <button id="scanButton" aria-label="Start Scan">Scan</button>
+    <button id="stopButton" disabled aria-label="Stop Scan">Stop</button>
+    <button id="clearButton" aria-label="Clear Scan Results">Clear</button>
+    <button id="exportButton" aria-label="Export Contacts">Export</button>
+    <div id="pageStatus" role="status" aria-live="polite"></div>
     <div id="debugBox"></div>
     <div id="statusLabel"></div>
     <div id="progressBar"></div>
@@ -44,7 +44,7 @@
         <p id="errorDetails">Error details will be displayed here.</p>
       </div>
     </div>
-  </div>
+  </main>
   <script type="module" src="popup.js"></script>
 </body>
 </html>
