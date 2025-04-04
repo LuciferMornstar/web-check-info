@@ -1,11 +1,19 @@
 export function setupUI() {
   const progressBarFill = document.getElementById('progressBarFill');
-  progressBarFill.setAttribute('aria-valuenow', 0);
+  if (progressBarFill) {
+    progressBarFill.setAttribute('aria-valuenow', 0);
+  } else {
+    console.warn('Progress bar element not found');
+  }
   // ...existing code for setting up UI elements...
 }
 
 export function updateProgressBar(progress) {
   const progressBarFill = document.getElementById('progressBarFill');
+  if (!progressBarFill) {
+    console.error('updateProgressBar: progressBarFill element not found');
+    return;
+  }
   progressBarFill.style.width = progress + '%';
   progressBarFill.setAttribute('aria-valuenow', progress);
 }

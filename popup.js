@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Function to update page status using current tab and stored cache info
   function updatePageStatus() {
-    const currentUrl = document.getElementById('websiteInput').value.trim();
+    const currentUrl = websiteInput.value.trim();
     let statusText = `Current Page: ${currentUrl}. `;
     const results = JSON.parse(localStorage.getItem('scanResults')) || {};
     if (results[currentUrl]) {
@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const contactPageInfo = document.getElementById('contactPageInfo');
   const debugInfo = document.getElementById('debugInfo');
   const ignoreRobotsToggle = document.getElementById('ignoreRobotsToggle');
+  const websiteInput = document.getElementById('websiteInput');
 
   // Error modal elements
   const errorModal = document.getElementById('errorModal');
@@ -107,15 +108,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   function updateButtonStates(isScanning) {
     scanButton.disabled = isScanning;
     stopButton.disabled = !isScanning;
-    if (isScanning) {
-      scanButton.classList.add('disabled');
-      stopButton.classList.remove('disabled');
-    } else {
-      scanButton.classList.remove('disabled');
-      stopButton.classList.add('disabled');
-    }
-    
-    // Ensure the buttons are visibly disabled/enabled
+    scanButton.classList.toggle('disabled', isScanning);
+    stopButton.classList.toggle('disabled', !isScanning);
     scanButton.style.pointerEvents = isScanning ? 'none' : 'auto';
     stopButton.style.pointerEvents = isScanning ? 'auto' : 'none';
   }
@@ -136,12 +130,13 @@ document.addEventListener('DOMContentLoaded', async function() {
       console.log('Scan result saved successfully!');
     } catch (error) {
       console.error('Error saving scan result:', error);
+      errorModal.textContent = 'Failed to save scan result. Please try again.';
+      errorModal.style.display = 'block';
     }
   }
 
-  // Replace the scan button event listener with web app version:
   scanButton.addEventListener('click', async function() {
-    const inputUrl = document.getElementById('websiteInput').value.trim();
+    const inputUrl = websiteInput.value.trim();
     if (!inputUrl) {
         alert("Please enter a website address.");
         return;
@@ -229,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     
     // Save the contacts to localStorage
-    const currentUrl = document.getElementById('websiteInput').value.trim();
+    const currentUrl = websiteInput.value.trim();
     if (!currentUrl) return;
     
     let results = JSON.parse(localStorage.getItem('scanResults')) || {};
@@ -266,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     phoneCount.textContent = '0';
     nameCount.textContent = '0';
     
-    const currentUrl = document.getElementById('websiteInput').value.trim();
+    const currentUrl = websiteInput.value.trim();
     if (!currentUrl) return;
 
     let results = JSON.parse(localStorage.getItem('scanResults')) || {};
@@ -278,7 +273,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Export contacts
   function exportContacts() {
-    const currentUrl = document.getElementById('websiteInput').value.trim();
+    const currentUrl = websiteInput.value.trim();
     if (!currentUrl) return;
 
     const results = JSON.parse(localStorage.getItem('scanResults')) || {};
@@ -304,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Load saved contacts
   function loadSavedContacts() {
-    const currentUrl = document.getElementById('websiteInput').value.trim();
+    const currentUrl = websiteInput.value.trim();
     if (!currentUrl) return;
     const results = JSON.parse(localStorage.getItem('scanResults')) || {};
     const pageResults = results[currentUrl];
@@ -356,7 +351,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function appendContact(contact) {
-    const contactsTable = document.getElementById('contactsTable');
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${contact.name || '-'}</td>
@@ -407,7 +401,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   document.getElementById('openTabsSelect').addEventListener('change', function() {
     const selectedUrl = this.value;
     if (selectedUrl) {
-      document.getElementById('websiteInput').value = selectedUrl;
+      websiteInput.value = selectedUrl;
     }
   });
 });
