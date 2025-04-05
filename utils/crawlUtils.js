@@ -178,7 +178,7 @@ export async function crawlWebsite({ url, netnutApiKey, bypassAntiBot, stopCrawl
 	// Example of how to check the stopCrawl flag
 	if (stopCrawl && stopCrawl()) {
 		console.log("Crawl stopped by user.");
-		return; // Or throw an error, depending on how you want to handle it
+		return { contacts: [], emails: [], phonesFound: [], names: [] }; // Return empty result
 	}
 
 	const response = await fetchWithTimeout(url, 15000, { netnutApiKey, bypassAntiBot });
@@ -188,7 +188,7 @@ export async function crawlWebsite({ url, netnutApiKey, bypassAntiBot, stopCrawl
 	// Example of how to check the stopCrawl flag during page processing
 	if (stopCrawl && stopCrawl()) {
 		console.log("Crawl stopped by user during page processing.");
-		return;
+		return { contacts: [], emails: [], phonesFound: [], names: [] }; // Return empty result
 	}
 
 	if (detectCaptcha(html)) {

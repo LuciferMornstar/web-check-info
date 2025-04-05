@@ -84,14 +84,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
       const result = await crawlWebsite({ url: targetUrl, netnutApiKey: '', bypassAntiBot: bypassConfirmation, stopCrawl: () => stopCrawl });
       console.log("crawlWebsite result:", result);
-      uiHandlers.displayContacts(result.contacts);
-      uiHandlers.updateCounter('emailCount', result.emails?.length || 0);
-      uiHandlers.updateCounter('phoneCount', result.phonesFound?.length || 0);
-      uiHandlers.updateCounter('nameCount', result.names?.length || 0);
-      uiHandlers.updateStatus('Contacts page scan complete!');
-      uiHandlers.updateDebugInfo('Contacts page scan complete!');
+      if (result) { // Check if result is not undefined
+        uiHandlers.displayContacts(result.contacts);
+        uiHandlers.updateCounter('emailCount', result.emails?.length || 0);
+        uiHandlers.updateCounter('phoneCount', result.phonesFound?.length || 0);
+        uiHandlers.updateCounter('nameCount', result.names?.length || 0);
+        uiHandlers.updateStatus('Contacts page scan complete!');
+        uiHandlers.updateDebugInfo('Contacts page scan complete!');
 
-      await saveScanResult(targetUrl, result.contacts);
+        await saveScanResult(targetUrl, result.contacts);
+      } else {
+        uiHandlers.updateStatus('Scan completed, but no results returned.');
+        uiHandlers.updateDebugInfo('Scan completed, but no results returned.');
+      }
     } catch (error) {
       console.error("Error during contacts page scan:", error);
       uiHandlers.showErrorModal(error.message);
