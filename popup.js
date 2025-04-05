@@ -54,11 +54,6 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('Scrape complete:', data);
 
     if (data.status === 'complete') {
-      const inputUrl = getWebsiteInput();
-      const scanResults = loadScanResults();
-      scanResults[inputUrl] = data.data;
-      saveScanResults(scanResults);
-
       uiHandlers.displayContacts(data.data.structuredContacts);
       uiHandlers.updateStatus('Scrapy-based scan complete!');
       uiHandlers.updateDebugInfo(
@@ -69,34 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
       uiHandlers.updateStatus('Error scanning');
       uiHandlers.updateDebugInfo(`Error: ${data.message}`);
     }
-
-    updateButtonStates(false);
-  }
-
-  // Helper to get the website input value
-  function getWebsiteInput() {
-    const websiteInput = document.getElementById('websiteInput');
-    return websiteInput ? websiteInput.value.trim() : '';
-  }
-
-  // Helper to load scan results from localStorage
-  function loadScanResults() {
-    return JSON.parse(localStorage.getItem('scanResults')) || {};
-  }
-
-  // Helper to save scan results to localStorage
-  function saveScanResults(results) {
-    localStorage.setItem('scanResults', JSON.stringify(results));
-  }
-
-  // Update button states
-  function updateButtonStates(isScanning) {
-    const scanButton = document.getElementById('scanButton');
-    const stopButton = document.getElementById('stopButton');
-    scanButton.disabled = isScanning;
-    stopButton.disabled = !isScanning;
-    scanButton.classList.toggle('disabled', isScanning);
-    stopButton.classList.toggle('disabled', !isScanning);
   }
 
   // Call the Scrapy spider via the Flask API
@@ -127,9 +94,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Event handler for the scan button
-  async function handleScanButtonClick() {
-    const inputUrl = getWebsiteInput();
+  // Event handler for starting the scan
+  async function handleScan() {
+    const websiteInput = document.getElementById('websiteInput');
+    const inputUrl = websiteInput ? websiteInput.value.trim() : '';
     if (!inputUrl) {
       alert('Please enter a website address.');
       return;
@@ -147,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
       initializeSocket();
     }
 
-    updateButtonStates(true);
     uiHandlers.updateStatus('Starting scan...');
     uiHandlers.updateDebugInfo(`Starting scan of ${inputUrl}`);
 
@@ -159,78 +126,18 @@ document.addEventListener('DOMContentLoaded', function () {
       uiHandlers.showErrorModal(error.message || 'Failed to start scan');
       uiHandlers.updateStatus('Error scanning');
       uiHandlers.updateDebugInfo(`Error: ${error.message || 'Unknown error'}`);
-      updateButtonStates(false);
     }
   }
 
-  // Event handler for the stop button
-  async function handleStopButtonClick() {
-    console.log('Stop button clicked');
-    uiHandlers.updateStatus('Stopping scan...');
-
-    try {
-      const response = await fetch('http://localhost:5000/cancel-scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId }),
-      });
-
-      const result = await response.json();
-      console.log('Cancel result:', result);
-
-      if (result.status === 'cancelled') {
-        uiHandlers.updateStatus('Scan cancelled');
-        uiHandlers.updateDebugInfo('Scan cancelled by user');
-      } else {
-        uiHandlers.updateStatus('Failed to cancel scan');
-        uiHandlers.updateDebugInfo(`Failed to cancel: ${result.message}`);
+  // Attach event listener to the input field for Enter key
+  const websiteInput = document.getElementById('websiteInput');
+  if (websiteInput) {
+    websiteInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        handleScan();
       }
-    } catch (error) {
-      console.error('Error cancelling scan:', error);
-      uiHandlers.updateDebugInfo(`Error cancelling scan: ${error.message}`);
-    }
-
-    updateButtonStates(false);
-  }
-
-  // Event handler for the clear button
-  function handleClearButtonClick() {
-    uiHandlers.clearContacts();
-    localStorage.removeItem('scanResults');
-    uiHandlers.updateStatus('Cleared contacts and cache.');
-  }
-
-  // Event handler for the export button
-  function handleExportButtonClick() {
-    const inputUrl = getWebsiteInput();
-    if (!inputUrl) return;
-
-    const scanResults = loadScanResults();
-    const pageResults = scanResults[inputUrl];
-    if (!pageResults || !pageResults.structuredContacts || pageResults.structuredContacts.length === 0) {
-      alert('No contacts to export!');
-      return;
-    }
-
-    let csvContent = 'data:text/csv;charset=utf-8,Name,Phone,Email\n';
-    pageResults.structuredContacts.forEach((contact) => {
-      csvContent += `"${contact.name || ''}","${contact.phone || ''}","${contact.email || ''}"\n`;
     });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'contacts.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
-
-  // Attach event listeners to buttons
-  document.getElementById('scanButton').addEventListener('click', handleScanButtonClick);
-  document.getElementById('stopButton').addEventListener('click', handleStopButtonClick);
-  document.getElementById('clearButton').addEventListener('click', handleClearButtonClick);
-  document.getElementById('exportButton').addEventListener('click', handleExportButtonClick);
 
   // Initialize WebSocket
   initializeSocket();

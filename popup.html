@@ -15,48 +15,10 @@
       <input id="websiteInput" type="text" placeholder="Enter website address" style="width:100%; padding:8px; font-size:16px;">
     </div>
 
-    <div class="header">
-      <div class="logo-container">
-        <span class="devils-mark">†</span>
-        <h1 class="logo">Devil's Contacts</h1>
-      </div>
-      <div>
-        <button id="stopButton" class="action-button" style="margin-left:10px;">Stop</button>
-      </div>
-    </div>
-
-    <div class="navigation">
-      <a href="settings.html" class="nav-link" id="settingsLink">Settings</a>
-      <a href="stored-info.html" class="nav-link" id="storedInfoLink">History</a>
-    </div>
-
     <div class="status-label" id="statusLabel">Ready to scan</div>
     <div id="debugInfo" class="debug-info"></div>
 
-    <!-- New container for real-time found items -->
     <div id="foundItemsContainer" class="found-items-container"></div>
-
-    <div class="button-container">
-      <button id="scanButton" class="scan-button">Scan Page</button>
-      <button id="stopButton" class="action-button">Stop</button>
-      <button id="clearButton" class="action-button">Clear</button>
-      <button id="exportButton" class="action-button">Export</button>
-    </div>
-
-    <div class="counter">
-      <div class="counter-item">
-        <div class="label">Emails</div>
-        <div id="emailCount" class="count">0</div>
-      </div>
-      <div class="counter-item">
-        <div class="label">Phones</div>
-        <div id="phoneCount" class="count">0</div>
-      </div>
-      <div class="counter-item">
-        <div class="label">Names</div>
-        <div id="nameCount" class="count">0</div>
-      </div>
-    </div>
 
     <table id="contactsTable" class="contacts-table">
       <thead>
@@ -68,7 +30,7 @@
         <tr>
           <td colspan="3" class="empty-state">
             <div>No contacts found yet</div>
-            <p>Click "Scan Page" to find contacts on this website</p>
+            <p>Enter a website address to start scanning</p>
           </td>
         </tr>
       </tbody>
