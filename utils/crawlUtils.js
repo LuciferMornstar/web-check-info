@@ -2,8 +2,6 @@
 import { extractContacts, patterns } from "./regexUtils.js";
 import { formatPhoneNumber, extractPhoneExtension } from '../contactRules.js';
 
-const EXTENSION_ID = "";
-
 // NEW: Anti-scraping settings and helper functions
 
 const userAgents = [
@@ -117,7 +115,7 @@ async function advancedFetch(url, options = {}, retries = 3, delayMs = 500, debu
         if (detectCaptcha(html)) {
           debugCallback(`advancedFetch: CAPTCHA detected on ${url}`);
           // Signal to popup that CAPTCHA needs solving
-          chrome.runtime.sendMessage(EXTENSION_ID, { action: 'captchaDetected', url: url });
+          chrome.runtime.sendMessage({ action: 'captchaDetected', url: url });
           throw new Error("Captcha detected; user intervention required.");
         }
         return response;

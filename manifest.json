@@ -1,25 +1,3 @@
-{
-  "manifest_version": 3,
-  "name": "Web Check",
-  "version": "1.0.0",
-  "description": "A web app to scan websites for contact information.",
-  "permissions": ["storage", "activeTab", "scripting", "tabs"],
-  "host_permissions": ["<all_urls>"],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "images/icon_16.png",
-      "48": "images/icon_48.png",
-      "128": "images/icon_128.png"
-    }
-  },
-  "icons": {
-    "16": "images/icon_16.png",
-    "48": "images/icon_48.png",
-    "128": "images/icon_128.png"
-  }
-}
+// This file was originally used for Chrome extension configuration.
+// ...remove or rename this file if not needed for AWS Amplify...
 
