@@ -10,7 +10,7 @@ export function setupUI() {
   } else {
     console.warn('Progress bar element not found');
   }
-  // ...existing code for setting up UI elements...
+  console.log('uiHandlers: setupUI called');
 }
 
 export function updateProgressBar(progress) {
@@ -73,20 +73,12 @@ export function updateCounter(elementId, count) {
 
 export function updateStatus(message) {
   const statusLabel = document.getElementById('statusLabel');
-  if (!statusLabel) {
-    console.error('updateStatus: statusLabel element not found');
-    return;
-  }
-  statusLabel.textContent = message;
+  if (statusLabel) statusLabel.textContent = message;
 }
 
 export function updateDebugInfo(message) {
   const debugInfo = document.getElementById('debugInfo');
-  if (!debugInfo) {
-    console.error('updateDebugInfo: debugInfo element not found');
-    return;
-  }
-  debugInfo.textContent = message;
+  if (debugInfo) debugInfo.textContent = message;
 }
 
 export function showErrorModal(errorMessage) {
@@ -98,6 +90,7 @@ export function showErrorModal(errorMessage) {
   }
   errorDetails.textContent = errorMessage || 'An unknown error occurred.';
   errorModal.style.display = 'block';
+  console.error(errorMessage);
 }
 
 export function clearContacts() {

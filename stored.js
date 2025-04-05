@@ -6,6 +6,17 @@ Amplify.configure(awsExports);
 import { listScanResults, getScanResult } from './graphql/queries';
 import { createScanResult, deleteScanResult } from './graphql/mutations';
 
+export function storeScanResults(url, data) {
+  const scanResults = JSON.parse(localStorage.getItem('scanResults')) || {};
+  scanResults[url] = data;
+  localStorage.setItem('scanResults', JSON.stringify(scanResults));
+}
+
+export function loadScanResults(url) {
+  const scanResults = JSON.parse(localStorage.getItem('scanResults')) || {};
+  return scanResults[url] || null;
+}
+
 const EXTENSION_ID = "";
 
 document.addEventListener('DOMContentLoaded', async function() {
