@@ -3,44 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Check</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
+  <title>Lucifer's Web Check</title>
 </head>
-<body>
-  <main id="app" role="main">
-    <h1>Web Check</h1>
-    <input type="url" id="websiteInput" placeholder="Enter website URL" aria-label="Website URL">
-    <div id="pageStatus" role="status" aria-live="polite"></div>
-    <div id="debugBox"></div>
-    <div id="statusLabel"></div>
-    <div id="progressBar"></div>
-    <div id="emailCount"></div>
-    <div id="phoneCount"></div>
-    <div id="nameCount"></div>
-    <table id="contactsTable">
-      <tr>
-        <td colspan="3" class="empty-state">
-          <div>No contacts found</div>
-          <p>Try scanning more pages on this website</p>
-        </td>
-      </tr>
-    </table>
-    <div id="contactPageContainer">
-      <div id="contactPageInfo"></div>
-    </div>
-    <div id="debugInfo"></div>
-    <input type="range" id="fontSizeSlider" min="10" max="20" value="14">
-    <label for="ignoreRobotsToggle">Ignore robots.txt:</label>
-    <input type="checkbox" id="ignoreRobotsToggle">
-
-    <!-- Error Modal -->
-    <div id="errorModal" class="modal">
-      <div class="modal-content">
-        <span class="close" id="closeErrorModal">&times;</span>
-        <p id="errorDetails">Error details will be displayed here.</p>
-      </div>
-    </div>
+<body class="amplify-theme">
+  <header class="amplify-header">
+    <h1>Lucifer's Web Check</h1>
+  </header>
+  <main class="amplify-content">
+    <p>Welcome to Lucifer's AWS Amplify-powered Web Contact Finder.</p>
+    <a href="popup.html" class="amplify-button">Go to Scanner</a>
   </main>
-  <script type="module" src="popup.js"></script>
+  <footer class="amplify-footer">
+    <p>© 2023 Lucifer</p>
+  </footer>
 </body>
 </html>
