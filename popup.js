@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Load saved settings
   const ignoreRobotsToggle = document.getElementById('ignoreRobotsToggle');
   const websiteInput = document.getElementById('websiteInput');
-  const openTabsSelect = document.getElementById('openTabsSelect');
 
   // Load saved settings
   const ignoreRobots = localStorage.getItem('ignoreRobots') === 'true';
@@ -101,9 +100,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   document.getElementById('stopButton').addEventListener('click', function() {
     console.log('Stop button clicked');
     uiHandlers.updateStatus('Stopping scan...');
-    chrome.runtime.sendMessage({ action: 'stopScan' }, function(response) {
-      console.log('Stop scan response:', response);
-    });
     updateButtonStates(false);
   });
 
@@ -176,43 +172,4 @@ document.addEventListener('DOMContentLoaded', async function() {
       uiHandlers.clearContacts();
     }
   }
-
-  // Populate open tabs dropdown
-  function populateOpenTabs() {
-    chrome.tabs.query({ currentWindow: true }, function(tabs) {
-      // Clear previous options except the first placeholder
-      openTabsSelect.innerHTML = '<option value="">-- Select open tab --</option>';
-      tabs.forEach(tab => {
-        if (tab.url && tab.url.startsWith('http')) {
-          const option = document.createElement('option');
-          option.value = tab.url;
-          option.textContent = tab.title || tab.url;
-          openTabsSelect.appendChild(option);
-        }
-      });
-    });
-  }
-  populateOpenTabs();
-  // Refresh dropdown every 30 seconds
-  setInterval(populateOpenTabs, 30000);
-
-  // Update websiteInput when the dropdown changes
-  openTabsSelect.addEventListener('change', function() {
-    const selectedUrl = this.value;
-    if (selectedUrl) {
-      websiteInput.value = selectedUrl;
-      updatePageStatus();
-    }
-  });
-
-  // Update websiteInput when the import button is clicked
-  document.getElementById('importTabButton').addEventListener('click', function() {
-    const selectedUrl = openTabsSelect.value;
-    if (selectedUrl) {
-      websiteInput.value = selectedUrl;
-      updatePageStatus();
-    } else {
-      alert("Please select an open tab from the dropdown.");
-    }
-  });
 });
