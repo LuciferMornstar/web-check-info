@@ -1,9 +1,4 @@
-import Amplify from 'aws-amplify';
-import awsExports from './aws-exports';
-Amplify.configure(awsExports);
-import { API, graphqlOperation } from 'aws-amplify';
 import { crawlWebsite, crawlEntireSite } from './utils/crawlUtils.js';
-import { createScanResult } from './graphql/mutations';
 import * as uiHandlers from './utils/uiHandlers.js';
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -44,23 +39,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Add stopCrawl flag
   let stopCrawl = false;
 
-  async function saveScanResult(url, contacts) {
-    try {
-      const input = {
-        url,
-        domain: new URL(url).hostname,
-        timestamp: Date.now(),
-        contactCount: contacts.length,
-        structuredContacts: contacts,
-      };
-      const result = await API.graphql(graphqlOperation(createScanResult, { input }));
-      console.log('Scan result saved successfully!', result); // Log the result for debugging
-    } catch (error) {
-      console.error('Error saving scan result:', error);
-      uiHandlers.showErrorModal('Failed to save scan result. Please try again.');
-    }
-  }
-
   // Scan button click event
   const scanButton = document.getElementById('scanButton');
   scanButton.addEventListener('click', async function() {
@@ -93,7 +71,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         uiHandlers.updateStatus('Contacts page scan complete!');
         uiHandlers.updateDebugInfo('Contacts page scan complete!');
 
-        await saveScanResult(targetUrl, result.contacts);
+        // Save scan results locally
+        const scanResults = JSON.parse(localStorage.getItem('scanResults')) || {};
+        scanResults[targetUrl] = {
+          structuredContacts: result.contacts,
+          rawContacts: {
+            emails: result.emails || [],
+            phones: result.phonesFound || [],
+            names: result.names || []
+          }
+        };
+        localStorage.setItem('scanResults', JSON.stringify(scanResults));
       } else {
         uiHandlers.updateStatus('Scan completed, but no results returned.');
         uiHandlers.updateDebugInfo('Scan completed, but no results returned.');
