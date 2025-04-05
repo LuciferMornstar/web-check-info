@@ -252,8 +252,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Function to clear all data
   function clearAllData() {
     if (confirm('Are you sure you want to delete all stored scan results? This action cannot be undone.')) {
-      // Clear all data logic here
-      showToast('All scan data cleared successfully!');
+      try {
+        localStorage.removeItem('scanResults');
+        showToast('All scan data cleared successfully!');
+        loadAllScans(); // Reload the scans to update the UI
+      } catch (error) {
+        console.error('Error clearing all data:', error);
+        showToast('Failed to clear all data!');
+      }
     }
   }
 

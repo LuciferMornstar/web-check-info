@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   // Scan button click event
-  document.getElementById('scanButton').addEventListener('click', async function() {
+  const scanButton = document.getElementById('scanButton');
+  scanButton.addEventListener('click', async function() {
     const inputUrl = websiteInput.value.trim();
     if (!inputUrl) {
       alert("Please enter a website address.");
@@ -108,7 +109,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   // Stop button click event
-  document.getElementById('stopButton').addEventListener('click', function() {
+  const stopButton = document.getElementById('stopButton');
+  stopButton.addEventListener('click', function() {
     console.log('Stop button clicked');
     uiHandlers.updateStatus('Stopping scan...');
     // Set stopCrawl to true
@@ -117,7 +119,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   // Clear button click event
-  document.getElementById('clearButton').addEventListener('click', () => {
+  const clearButton = document.getElementById('clearButton');
+  clearButton.addEventListener('click', () => {
     uiHandlers.clearContacts();
     // Clear local storage as well
     localStorage.removeItem('scanResults');
@@ -125,7 +128,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   // Export button click event
-  document.getElementById('exportButton').addEventListener('click', exportContacts);
+  const exportButton = document.getElementById('exportButton');
+  exportButton.addEventListener('click', exportContacts);
 
   // Load saved contacts
   loadSavedContacts();
