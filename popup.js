@@ -41,6 +41,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Set initial state: stop button disabled by default
   updateButtonStates(false);
 
+  // Add stopCrawl flag
+  let stopCrawl = false;
+
   async function saveScanResult(url, contacts) {
     try {
       const input = {
@@ -75,8 +78,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       "This may violate website terms of service and could lead to blocking."
     );
 
+    // Reset stopCrawl flag
+    stopCrawl = false;
+
     try {
-      const result = await crawlWebsite({ url: targetUrl, netnutApiKey: '', bypassAntiBot: bypassConfirmation });
+      const result = await crawlWebsite({ url: targetUrl, netnutApiKey: '', bypassAntiBot: bypassConfirmation, stopCrawl: () => stopCrawl });
       console.log("crawlWebsite result:", result);
       uiHandlers.displayContacts(result.contacts);
       uiHandlers.updateCounter('emailCount', result.emails?.length || 0);
@@ -100,6 +106,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   document.getElementById('stopButton').addEventListener('click', function() {
     console.log('Stop button clicked');
     uiHandlers.updateStatus('Stopping scan...');
+    // Set stopCrawl to true
+    stopCrawl = true;
     updateButtonStates(false);
   });
 

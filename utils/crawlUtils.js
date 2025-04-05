@@ -171,12 +171,26 @@ async function ethicalFetch(url, options = {}) {
   return fetchWithTimeout(url, options.timeout || 10000, { ...options, headers });
 }
 
-async function crawlWebsite(options = {}, cancelToken = { cancelled: false }) {
-	console.log("Starting web scraping for URL:", options.url);
-	if (!options.url) throw new Error("No URL provided for scraping.");
-	const response = await fetchWithTimeout(options.url, 15000, options);
+export async function crawlWebsite({ url, netnutApiKey, bypassAntiBot, stopCrawl }) {
+	console.log("Starting web scraping for URL:", url);
+	if (!url) throw new Error("No URL provided for scraping.");
+
+	// Example of how to check the stopCrawl flag
+	if (stopCrawl && stopCrawl()) {
+		console.log("Crawl stopped by user.");
+		return; // Or throw an error, depending on how you want to handle it
+	}
+
+	const response = await fetchWithTimeout(url, 15000, { netnutApiKey, bypassAntiBot });
 	if (!response.ok) throw new Error("Network error: " + response.status);
 	const html = await response.text();
+
+	// Example of how to check the stopCrawl flag during page processing
+	if (stopCrawl && stopCrawl()) {
+		console.log("Crawl stopped by user during page processing.");
+		return;
+	}
+
 	if (detectCaptcha(html)) {
 		throw new Error("Captcha detected; unable to scrape the page.");
 	}
@@ -338,9 +352,9 @@ function findContactPageLinks(doc, baseUrl) {
 }
 
 // NEW: Function to crawl the entire site recursively with real-time updates and debug logging
-async function crawlEntireSite(options = {}, updateCallback, cancelToken = { cancelled: false }, debugCallback = () => {}) {
-  if (!options.url) throw new Error("No URL provided for crawling.");
-  const baseUrl = options.url;
+export async function crawlEntireSite({ url, netnutApiKey, bypassAntiBot }, updateCallback, cancelToken, debugCallback = () => {}) {
+  if (!url) throw new Error("No URL provided for crawling.");
+  const baseUrl = url;
   let baseDomain;
   try {
     baseDomain = new URL(baseUrl).hostname;
@@ -363,7 +377,7 @@ async function crawlEntireSite(options = {}, updateCallback, cancelToken = { can
     debugCallback(`Crawling ${url} (offsite: ${offsite})`);
     
     try {
-      const response = await ethicalFetch(url, options);
+      const response = await ethicalFetch(url, { netnutApiKey, bypassAntiBot });
       if (!response.ok) {
         debugCallback(`Skipping ${url} due to non-OK response`);
         continue;
@@ -429,5 +443,3 @@ async function crawlEntireSite(options = {}, updateCallback, cancelToken = { can
     }
   };
 }
-
-export { crawlWebsite, crawlEntireSite };
