@@ -21,16 +21,21 @@ def scrape_url():
     url = request.args.get('url')
     session_id = request.args.get('session_id')
     
+    print(f"Received scrape request for URL: {url}, session_id: {session_id}")
+    
     if not url:
+        print("Error: URL parameter is missing")
         return jsonify({"error": "URL parameter is required"}), 400
     
     if not session_id:
-        session_id = "default_session"
+        session_id = f"default_session_{int(time.time())}"
+        print(f"No session_id provided, using: {session_id}")
     
     # Start a new thread for the scraping process
     thread = threading.Thread(target=run_scraper, args=(url, session_id))
     thread.daemon = True
     thread.start()
+    print(f"Started scraping thread for {url}")
     
     return jsonify({
         "status": "started",
@@ -39,6 +44,7 @@ def scrape_url():
     })
 
 def run_scraper(url, session_id):
+    print(f"Starting scraper for {url} with session_id {session_id}")
     try:
         # Create a temporary file to store the scrapy output
         with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as tmp:
@@ -52,14 +58,23 @@ def run_scraper(url, session_id):
         })
         
         # Run the scrapy spider as a subprocess with -s LOG_STDOUT=True to get logs
-        process = subprocess.Popen([
+        command = [
             'scrapy', 'runspider', 'scrapy_spider.py',
             '-a', f'url={url}',
             '-a', f'session_id={session_id}', 
             '-s', 'LOG_STDOUT=True',
             '-o', tmp_filename,
             '-t', 'json'
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+        ]
+        print(f"Running command: {' '.join(command)}")
+        
+        process = subprocess.Popen(
+            command, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True, 
+            bufsize=1
+        )
         
         # Store the process for potential cancellation
         active_processes[session_id] = process
@@ -155,6 +170,7 @@ def run_scraper(url, session_id):
             })
     
     except Exception as e:
+        print(f"Error in run_scraper: {str(e)}")
         socketio.emit('scrape_complete', {
             'status': 'error',
             'message': str(e),
@@ -167,14 +183,17 @@ def run_scraper(url, session_id):
 def cancel_scrape():
     session_id = request.json.get('session_id')
     if not session_id:
+        print("Error: session_id parameter is missing")
         return jsonify({"error": "session_id parameter is required"}), 400
     
     if session_id in active_processes:
         # Kill the process
+        print(f"Cancelling scrape for session_id: {session_id}")
         active_processes[session_id].terminate()
         del active_processes[session_id]
         return jsonify({"status": "cancelled", "message": "Scraping process cancelled"})
     else:
+        print(f"No active scraping process found for session_id: {session_id}")
         return jsonify({"status": "not_found", "message": "No active scraping process found for this session"}), 404
 
 @socketio.on('connect')

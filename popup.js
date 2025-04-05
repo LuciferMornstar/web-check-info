@@ -116,8 +116,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
       // Generate new session ID for this scan
       sessionId = generateSessionId();
+      console.log(`Generated new session ID: ${sessionId}`);
+      
+      // Add a protocol if missing
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+        console.log(`Added protocol to URL: ${url}`);
+      }
       
       const response = await fetch(`http://localhost:5000/scrape?url=${encodeURIComponent(url)}&session_id=${sessionId}`);
+      
+      console.log(`API response status: ${response.status}`);
+      
       if (!response.ok) {
         throw new Error(`Scrapy spider returned status ${response.status}`);
       }
@@ -132,19 +142,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
-  // Scan button click event
+  // Initialize socket only once
+  if (!socket) {
+    initializeSocket();
+  }
+
+  // Scan button click event - moved outside any function to ensure it's registered only once
   const scanButton = document.getElementById('scanButton');
   if (!scanButton) {
-    console.error("Scan button not found!");
+    console.error("Scan button not found in the DOM!");
   } else {
-    scanButton.addEventListener('click', async function() {
+    // Remove any existing listeners to prevent duplicates
+    scanButton.replaceWith(scanButton.cloneNode(true));
+    
+    // Get the fresh button reference
+    const freshScanButton = document.getElementById('scanButton');
+    
+    freshScanButton.addEventListener('click', async function() {
+      console.log("Scan button clicked");
+      
       const inputUrl = websiteInput.value.trim();
       if (!inputUrl) {
         alert("Please enter a website address.");
         return;
       }
       
-      console.log("Starting scan for:", inputUrl);
+      console.log(`Starting scan for: ${inputUrl}`);
       
       // Reset UI for new scan
       uiHandlers.clearContacts();
@@ -167,8 +190,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       try {
         // Call Scrapy spider - this now returns immediately while updates come via WebSocket
-        await callScrapySpider(inputUrl);
-        console.log("Scan initiated successfully");
+        const result = await callScrapySpider(inputUrl);
+        console.log("Scan initiated successfully:", result);
+        uiHandlers.updateStatus(`Scanning in progress: ${inputUrl}`);
       } catch (error) {
         console.error("Error starting scan:", error);
         uiHandlers.showErrorModal(error.message || "Failed to start scan");
@@ -177,6 +201,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateButtonStates(false);
       }
     });
+    
+    console.log("Scan button event listener attached");
   }
 
   // Stop button click event
