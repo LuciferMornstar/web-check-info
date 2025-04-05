@@ -3,6 +3,7 @@
 <head>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <title>Web Contact Finder</title>
 </head>
 <body class="amplify-theme">
@@ -32,6 +33,9 @@
 
     <div class="status-label" id="statusLabel">Ready to scan</div>
     <div id="debugInfo" class="debug-info"></div>
+
+    <!-- New container for real-time found items -->
+    <div id="foundItemsContainer" class="found-items-container"></div>
 
     <div class="counter">
       <div class="counter-item">

@@ -116,3 +116,32 @@ export function clearContacts() {
   updateCounter('phoneCount', 0);
   updateCounter('nameCount', 0);
 }
+
+export function addFoundItem(type, value) {
+  // Add a small notification for newly found items
+  const foundItem = document.createElement('div');
+  foundItem.className = 'found-item';
+  foundItem.innerHTML = `<strong>${type}:</strong> ${value}`;
+  
+  // Add to a container for found items
+  const foundItemsContainer = document.getElementById('foundItemsContainer');
+  if (foundItemsContainer) {
+    // Add at the top and trim if too many
+    foundItemsContainer.insertBefore(foundItem, foundItemsContainer.firstChild);
+    
+    // Remove items if there are too many (keep last 10)
+    while (foundItemsContainer.children.length > 10) {
+      foundItemsContainer.removeChild(foundItemsContainer.lastChild);
+    }
+    
+    // Auto-fade out after 5 seconds
+    setTimeout(() => {
+      foundItem.style.opacity = '0';
+      setTimeout(() => {
+        if (foundItem.parentNode === foundItemsContainer) {
+          foundItemsContainer.removeChild(foundItem);
+        }
+      }, 500); // Remove after fade animation
+    }, 5000);
+  }
+}

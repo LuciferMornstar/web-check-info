@@ -1,29 +1,28 @@
 import scrapy
 import re
-import json
 from urllib.parse import urlparse
-import logging
+from webcheck.items import ContactItem
 
 class ContactSpider(scrapy.Spider):
     name = "contact_spider"
-    allowed_domains = []
     
     # Regex patterns for contact extraction
     EMAIL_PATTERN = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}', re.IGNORECASE)
     PHONE_PATTERN = re.compile(r'(?:\+?(?:1|44|33|49|61|7|8[01]|9[0-9]|[2-9])\s?)?(?:\(?\d{3,4}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}(?:(?:\s?(?:x|ext|extension)[\s.]?)?\d{1,5})?', re.IGNORECASE)
     NAME_PATTERN = re.compile(r'(?:(?:Dr|Prof|Professor|Mr|Mrs|Ms|Miss|Sir|Dame|Revd|Rev|Hon|Lady)\s+)?(?:[A-Z][a-z]{1,20}(?:\s+[A-Z][a-z]{1,20}){1,4})')
 
-    def __init__(self, url=None, session_id=None, *args, **kwargs):
+    def __init__(self, url=None, *args, **kwargs):
         super(ContactSpider, self).__init__(*args, **kwargs)
-        self.session_id = session_id or "default_session"
         
         if url:
             self.start_urls = [url]
             self.allowed_domains = [self.extract_domain(url)]
-            self.logger.info(f"Starting spider for {url} with session_id {self.session_id}")
+            self.logger.info(f"Starting spider for {url}")
         else:
-            raise ValueError("Please provide a URL to scrape, e.g. scrapy runspider scrapy_spider.py -a url=http://example.com")
-        
+            # Default URL if none provided (for testing)
+            self.start_urls = ["https://example.com"]
+            self.allowed_domains = ["example.com"]
+            
         # Setup counters
         self.email_count = 0
         self.phone_count = 0
@@ -66,15 +65,14 @@ class ContactSpider(scrapy.Spider):
         # Create structured contacts by combining data
         structured_contacts = self.create_structured_contacts(valid_names, valid_emails, valid_phones)
         
-        # Return scraped data
-        yield {
-            'url': response.url,
-            'structuredContacts': structured_contacts,
-            'emailCount': len(valid_emails),
-            'phoneCount': len(valid_phones),
-            'nameCount': len(valid_names),
-            'pageCount': self.page_count
-        }
+        for contact in structured_contacts:
+            item = ContactItem()
+            item['name'] = contact['name']
+            item['email'] = contact['email']
+            item['phone'] = contact['phone']
+            item['url'] = response.url
+            item['domain'] = self.extract_domain(response.url)
+            yield item
         
         # Also check contact pages if this is the home page
         if self.is_home_page(response.url) and self.page_count < 5:  # Limit to 5 pages for real-time demo
@@ -84,6 +82,7 @@ class ContactSpider(scrapy.Spider):
             for link in contact_links:
                 yield response.follow(link, self.parse)
     
+    # ... existing helper methods ...
     def is_valid_email(self, email):
         return not ('example.com' in email or 'domain.com' in email or 'test.com' in email)
     

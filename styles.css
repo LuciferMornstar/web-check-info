@@ -199,3 +199,29 @@ button:disabled {
   font-weight: 600;
   margin-top: 1rem;
 }
+
+.found-items-container {
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 10px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.found-item {
+  padding: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--border-color);
+  transition: opacity 0.5s ease-out;
+  opacity: 1;
+}
+
+.found-item:last-child {
+  border-bottom: none;
+}
+
+.found-item strong {
+  color: var(--accent-color);
+}
