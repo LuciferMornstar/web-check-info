@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     stopCrawl = false;
 
     try {
-      // Call Scrapy spider instead of JS-based crawl
+      // Call Scrapy spider for web scraping
       const result = await callScrapySpider(inputUrl);
       if (result && result.structuredContacts) {
         // Example: store result in localStorage or update UI
