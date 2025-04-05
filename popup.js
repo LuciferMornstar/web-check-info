@@ -129,6 +129,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Function to import the address from the currently active tab
+  async function importAddressFromTab() {
+    try {
+      // Use the Chrome Tabs API to get the active tab's URL
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (activeTab && activeTab.url) {
+        const websiteInput = document.getElementById('websiteInput');
+        websiteInput.value = activeTab.url;
+        console.log(`Imported URL from active tab: ${activeTab.url}`);
+        uiHandlers.updateStatus('Imported URL from active tab.');
+      } else {
+        console.warn('No active tab or URL found.');
+        uiHandlers.updateStatus('No active tab or URL found.');
+      }
+    } catch (error) {
+      console.error('Error importing address from tab:', error);
+      uiHandlers.updateStatus('Failed to import URL from tab.');
+    }
+  }
+
+  // Attach event listener to the "Import from Tab" button
+  const importTabButton = document.getElementById('importTabButton');
+  if (importTabButton) {
+    importTabButton.addEventListener('click', importAddressFromTab);
+  }
+
   // Attach event listener to the input field for Enter key
   const websiteInput = document.getElementById('websiteInput');
   if (websiteInput) {
