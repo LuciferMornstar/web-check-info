@@ -169,35 +169,20 @@ async function ethicalFetch(url, options = {}) {
   return fetchWithTimeout(url, options.timeout || 10000, { ...options, headers });
 }
 
-export async function crawlWebsite({ url, netnutApiKey, bypassAntiBot, stopCrawl }) {
-	console.log("Starting web scraping for URL:", url);
-	if (!url) throw new Error("No URL provided for scraping.");
-
-	// Example of how to check the stopCrawl flag
-	if (stopCrawl && stopCrawl()) {
-		console.log("Crawl stopped by user.");
-		return { contacts: [], emails: [], phonesFound: [], names: [] }; // Return empty result
-	}
-
-	const response = await fetchWithTimeout(url, 15000, { netnutApiKey, bypassAntiBot });
-	if (!response.ok) throw new Error("Network error: " + response.status);
-	const html = await response.text();
-
-	// Example of how to check the stopCrawl flag during page processing
-	if (stopCrawl && stopCrawl()) {
-		console.log("Crawl stopped by user during page processing.");
-		return { contacts: [], emails: [], phonesFound: [], names: [] }; // Return empty result
-	}
-
-	if (detectCaptcha(html)) {
-		throw new Error("Captcha detected; unable to scrape the page.");
-	}
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(html, "text/html");
-	const contacts = extractContacts(doc);
-	console.log("Scraping result:", contacts);
-	return contacts; // { names, emails, phonesFound }
+// REMOVE or COMMENT OUT ALL JS-BASED CRAWLING LOGIC
+/* 
+export async function crawlWebsite(...) {
+  // JavaScript crawling logic removed in favor of Scrapy approach
+  throw new Error("crawlWebsite function is deprecated. Use Scrapy-based Python crawler instead.");
 }
+*/
+
+/* 
+export async function crawlEntireSite(...) {
+  // JavaScript site-wide crawling logic removed in favor of Scrapy approach
+  throw new Error("crawlEntireSite function is deprecated. Use Scrapy-based Python crawler instead.");
+}
+*/
 
 // Helper: Zip aggregated arrays into an array of contact objects
 function zipContacts(aggregated) {
@@ -347,97 +332,4 @@ function findContactPageLinks(doc, baseUrl) {
   }
   
   return contactLinks;
-}
-
-// NEW: Function to crawl the entire site recursively with real-time updates and debug logging
-export async function crawlEntireSite({ url, netnutApiKey, bypassAntiBot }, updateCallback, cancelToken, debugCallback = () => {}) {
-  if (!url) throw new Error("No URL provided for crawling.");
-  const baseUrl = url;
-  let baseDomain;
-  try {
-    baseDomain = new URL(baseUrl).hostname;
-  } catch (e) {
-    throw new Error("Invalid start URL");
-  }
-  
-  debugCallback(`crawlEntireSite: Starting crawl at ${baseUrl}`);
-  const aggregated = { names: [], emails: [], phonesFound: [] };
-  const parser = new DOMParser();
-  const visited = new Set();
-
-  // Define a queue of objects: each with { url, offsite } where offsite indicates if this link is from a different domain.
-  const queue = [{ url: baseUrl, offsite: false }];
-  
-  while (queue.length > 0 && !cancelToken.cancelled) {
-    const { url, offsite } = queue.shift();
-    if (visited.has(url)) continue;
-    visited.add(url);
-    debugCallback(`Crawling ${url} (offsite: ${offsite})`);
-    
-    try {
-      const response = await ethicalFetch(url, { netnutApiKey, bypassAntiBot });
-      if (!response.ok) {
-        debugCallback(`Skipping ${url} due to non-OK response`);
-        continue;
-      }
-      const html = await response.text();
-      if (detectCaptcha(html)) {
-        debugCallback(`Captcha detected at ${url}`);
-        continue;
-      }
-      const doc = parser.parseFromString(html, "text/html");
-      const contacts = extractContacts(doc) || {};
-      aggregated.names.push(...(Array.isArray(contacts.names) ? contacts.names : []));
-      aggregated.emails.push(...(Array.isArray(contacts.emails) ? contacts.emails : []));
-      aggregated.phonesFound.push(...(Array.isArray(contacts.phonesFound) ? contacts.phonesFound : []));
-      debugCallback(`Extracted from ${url}: ${contacts.names.length} names, ${contacts.emails.length} emails, ${contacts.phonesFound.length} phones`);
-      if (typeof updateCallback === "function") {
-        updateCallback({ 
-          currentUrl: url,
-          contacts: zipContacts(aggregated),
-          aggregated: {
-            names: Array.from(new Set(aggregated.names)),
-            emails: Array.from(new Set(aggregated.emails)),
-            phonesFound: Array.from(new Set(aggregated.phonesFound))
-          }
-        });
-      }
-      
-      // Only extract further links if this page is from the base site.
-      if (!offsite) {
-        const anchors = doc.querySelectorAll("a[href]");
-        anchors.forEach(a => {
-          try {
-            const linkUrl = new URL(a.getAttribute("href"), url).href;
-            // Skip if already visited.
-            if (visited.has(linkUrl)) return;
-            const linkDomain = new URL(linkUrl).hostname;
-            if (linkDomain === baseDomain) {
-              // Same domain: add for full recursive crawling.
-              queue.push({ url: linkUrl, offsite: false });
-            } else {
-              // Offsite: only add one page deep.
-              queue.push({ url: linkUrl, offsite: true });
-            }
-          } catch (e) {
-            // Skip invalid URLs.
-          }
-        });
-      }
-    } catch (e) {
-      debugCallback(`Error crawling ${url}: ${e.message}`);
-      console.error("Error crawling", url, e);
-    }
-    await new Promise(resolve => setTimeout(resolve, randomDelay(300, 1200)));
-  }
-  
-  debugCallback("crawlEntireSite: Crawl complete");
-  return {
-    contacts: zipContacts(aggregated),
-    aggregated: {
-      names: Array.from(new Set(aggregated.names)),
-      emails: Array.from(new Set(aggregated.emails)),
-      phonesFound: Array.from(new Set(aggregated.phonesFound))
-    }
-  };
 }

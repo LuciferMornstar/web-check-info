@@ -1,4 +1,3 @@
-import { crawlWebsite, crawlEntireSite } from './utils/crawlUtils.js';
 import * as uiHandlers from './utils/uiHandlers.js';
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -39,6 +38,23 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Add stopCrawl flag
   let stopCrawl = false;
 
+  // Helper function to call Scrapy spider
+  async function callScrapySpider(url) {
+    try {
+      // Example: calling a local Python server running Scrapy
+      const response = await fetch(`http://localhost:5000/scrape?url=${encodeURIComponent(url)}`);
+      if (!response.ok) {
+        throw new Error(`Scrapy spider returned status ${response.status}`);
+      }
+      // Expected to return JSON with scraped contacts
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to call Scrapy spider:", error);
+      throw error;
+    }
+  }
+
   // Scan button click event
   const scanButton = document.getElementById('scanButton');
   scanButton.addEventListener('click', async function() {
@@ -51,45 +67,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     uiHandlers.updateStatus('Scanning...');
     uiHandlers.updateDebugInfo('Starting scan...');
     console.log("Scan button clicked, target URL:", inputUrl);
-    const targetUrl = inputUrl;
-    const bypassConfirmation = confirm(
-      "Do you want to enable aggressive anti-scraping bypass measures? " +
-      "This may violate website terms of service and could lead to blocking."
-    );
 
     // Reset stopCrawl flag
     stopCrawl = false;
 
     try {
-      const result = await crawlWebsite({ url: targetUrl, netnutApiKey: '', bypassAntiBot: bypassConfirmation, stopCrawl: () => stopCrawl });
-      console.log("crawlWebsite result:", result);
-      if (result) { // Check if result is not undefined
-        uiHandlers.displayContacts(result.contacts);
-        uiHandlers.updateCounter('emailCount', result.emails?.length || 0);
-        uiHandlers.updateCounter('phoneCount', result.phonesFound?.length || 0);
-        uiHandlers.updateCounter('nameCount', result.names?.length || 0);
-        uiHandlers.updateStatus('Contacts page scan complete!');
-        uiHandlers.updateDebugInfo('Contacts page scan complete!');
-
-        // Save scan results locally
+      // Call Scrapy spider instead of JS-based crawl
+      const result = await callScrapySpider(inputUrl);
+      if (result && result.structuredContacts) {
+        // Example: store result in localStorage or update UI
         const scanResults = JSON.parse(localStorage.getItem('scanResults')) || {};
-        scanResults[targetUrl] = {
-          structuredContacts: result.contacts,
-          rawContacts: {
-            emails: result.emails || [],
-            phones: result.phonesFound || [],
-            names: result.names || []
-          }
-        };
+        scanResults[inputUrl] = { structuredContacts: result.structuredContacts };
         localStorage.setItem('scanResults', JSON.stringify(scanResults));
-      } else {
-        uiHandlers.updateStatus('Scan completed, but no results returned.');
-        uiHandlers.updateDebugInfo('Scan completed, but no results returned.');
+        uiHandlers.displayContacts(result.structuredContacts);
+        uiHandlers.updateCounter('emailCount', result.emailCount || 0);
+        uiHandlers.updateCounter('phoneCount', result.phoneCount || 0);
+        uiHandlers.updateCounter('nameCount', result.nameCount || 0);
+        uiHandlers.updateStatus('Scrapy-based scan complete!');
+        uiHandlers.updateDebugInfo('Scrapy-based scan complete!');
       }
     } catch (error) {
-      console.error("Error during contacts page scan:", error);
+      console.error("Error during scan:", error);
       uiHandlers.showErrorModal(error.message);
-      uiHandlers.updateStatus('Error scanning contacts page');
+      uiHandlers.updateStatus('Error scanning');
       uiHandlers.updateDebugInfo(`Error: ${error.message}`);
     } finally {
       updateButtonStates(false);
