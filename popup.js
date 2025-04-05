@@ -41,14 +41,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Helper function to call Scrapy spider
   async function callScrapySpider(url) {
     try {
-      // Example: calling a local Python server running Scrapy
       const response = await fetch(`http://localhost:5000/scrape?url=${encodeURIComponent(url)}`);
       if (!response.ok) {
         throw new Error(`Scrapy spider returned status ${response.status}`);
       }
       // Expected to return JSON with scraped contacts
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       console.error("Failed to call Scrapy spider:", error);
       throw error;
