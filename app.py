@@ -136,7 +136,7 @@ def run_scraper(url, session_id):
             del active_processes[session_id]
         
         # Return results via WebSocket
-        if isinstance(results, list) and len(results > 0):
+        if isinstance(results, list) and len(results) > 0:
             socketio.emit('scrape_complete', {
                 'status': 'complete',
                 'data': results[0],

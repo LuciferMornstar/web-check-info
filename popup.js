@@ -134,40 +134,50 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Scan button click event
   const scanButton = document.getElementById('scanButton');
-  scanButton.addEventListener('click', async function() {
-    const inputUrl = websiteInput.value.trim();
-    if (!inputUrl) {
-      alert("Please enter a website address.");
-      return;
-    }
-    
-    // Reset UI for new scan
-    uiHandlers.clearContacts();
-    uiHandlers.updateCounter('emailCount', 0);
-    uiHandlers.updateCounter('phoneCount', 0);
-    uiHandlers.updateCounter('nameCount', 0);
-    
-    updateButtonStates(true);
-    uiHandlers.updateStatus('Starting scan...');
-    uiHandlers.updateDebugInfo(`Starting scan of ${inputUrl}`);
-    console.log("Scan button clicked, target URL:", inputUrl);
-
-    // Reset stopCrawl flag
-    stopCrawl = false;
-
-    try {
-      // Call Scrapy spider - this now returns immediately while updates come via WebSocket
-      await callScrapySpider(inputUrl);
+  if (!scanButton) {
+    console.error("Scan button not found!");
+  } else {
+    scanButton.addEventListener('click', async function() {
+      const inputUrl = websiteInput.value.trim();
+      if (!inputUrl) {
+        alert("Please enter a website address.");
+        return;
+      }
       
-      // No need to update UI here - it's handled by WebSocket events
-    } catch (error) {
-      console.error("Error starting scan:", error);
-      uiHandlers.showErrorModal(error.message);
-      uiHandlers.updateStatus('Error starting scan');
-      uiHandlers.updateDebugInfo(`Error: ${error.message}`);
-      updateButtonStates(false);
-    }
-  });
+      console.log("Starting scan for:", inputUrl);
+      
+      // Reset UI for new scan
+      uiHandlers.clearContacts();
+      uiHandlers.updateCounter('emailCount', 0);
+      uiHandlers.updateCounter('phoneCount', 0);
+      uiHandlers.updateCounter('nameCount', 0);
+      
+      // Make sure WebSocket is connected
+      if (!socket || !socket.connected) {
+        console.log("Socket not connected, reinitializing...");
+        initializeSocket();
+      }
+      
+      updateButtonStates(true);
+      uiHandlers.updateStatus('Starting scan...');
+      uiHandlers.updateDebugInfo(`Starting scan of ${inputUrl}`);
+      
+      // Reset stopCrawl flag
+      stopCrawl = false;
+
+      try {
+        // Call Scrapy spider - this now returns immediately while updates come via WebSocket
+        await callScrapySpider(inputUrl);
+        console.log("Scan initiated successfully");
+      } catch (error) {
+        console.error("Error starting scan:", error);
+        uiHandlers.showErrorModal(error.message || "Failed to start scan");
+        uiHandlers.updateStatus('Error scanning');
+        uiHandlers.updateDebugInfo(`Error: ${error.message || "Unknown error"}`);
+        updateButtonStates(false);
+      }
+    });
+  }
 
   // Stop button click event
   const stopButton = document.getElementById('stopButton');
