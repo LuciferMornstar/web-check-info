@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         contactCount: contacts.length,
         structuredContacts: contacts,
       };
-      await API.graphql(graphqlOperation(createScanResult, { input }));
-      console.log('Scan result saved successfully!');
+      const result = await API.graphql(graphqlOperation(createScanResult, { input }));
+      console.log('Scan result saved successfully!', result); // Log the result for debugging
     } catch (error) {
       console.error('Error saving scan result:', error);
       uiHandlers.showErrorModal('Failed to save scan result. Please try again.');
