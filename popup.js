@@ -1,96 +1,95 @@
 import * as uiHandlers from './utils/uiHandlers.js';
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function () {
   console.log('Popup initialized');
 
   // Initialize UI elements
   uiHandlers.setupUI();
-  
-  // Setup WebSocket connection
+
+  // WebSocket and session management
   let socket;
   let sessionId = generateSessionId();
-  
+
+  // Initialize WebSocket connection
   function initializeSocket() {
     socket = io('http://localhost:5000');
-    
+
     socket.on('connect', () => {
       console.log('WebSocket connected');
       uiHandlers.updateDebugInfo('WebSocket connected');
     });
-    
+
     socket.on('disconnect', () => {
       console.log('WebSocket disconnected');
       uiHandlers.updateDebugInfo('WebSocket disconnected');
     });
-    
-    socket.on('scrape_update', (data) => {
-      // Only process updates for our session
-      if (data.session_id !== sessionId) return;
-      
-      console.log('Scrape update:', data);
-      
-      if (data.status === 'crawling') {
-        uiHandlers.updateStatus(`Scanning: ${data.url}`);
-      }
-      
-      if (data.status === 'progress') {
-        if (data.type === 'email') {
-          uiHandlers.updateCounter('emailCount', data.count);
-          uiHandlers.addFoundItem('email', data.value);
-        } else if (data.type === 'phone') {
-          uiHandlers.updateCounter('phoneCount', data.count);
-          uiHandlers.addFoundItem('phone', data.value);
-        } else if (data.type === 'name') {
-          uiHandlers.updateCounter('nameCount', data.count);
-          uiHandlers.addFoundItem('name', data.value);
-        }
-      }
-    });
-    
-    socket.on('scrape_complete', (data) => {
-      // Only process updates for our session
-      if (data.session_id !== sessionId) return;
-      
-      console.log('Scrape complete:', data);
-      
-      if (data.status === 'complete') {
-        // Store the results
-        const inputUrl = websiteInput.value.trim();
-        const scanResults = JSON.parse(localStorage.getItem('scanResults')) || {};
-        scanResults[inputUrl] = data.data;
-        localStorage.setItem('scanResults', JSON.stringify(scanResults));
-        
-        // Update UI
-        uiHandlers.displayContacts(data.data.structuredContacts);
-        uiHandlers.updateStatus('Scrapy-based scan complete!');
-        uiHandlers.updateDebugInfo(`Scan complete. Found ${data.data.emailCount} emails, ${data.data.phoneCount} phones, and ${data.data.nameCount} names across ${data.data.pageCount} pages.`);
-      } else if (data.status === 'error') {
-        uiHandlers.showErrorModal(data.message);
-        uiHandlers.updateStatus('Error scanning');
-        uiHandlers.updateDebugInfo(`Error: ${data.message}`);
-      }
-      
-      updateButtonStates(false);
-    });
+
+    socket.on('scrape_update', handleScrapeUpdate);
+    socket.on('scrape_complete', handleScrapeComplete);
   }
-  
+
+  // Generate a unique session ID
   function generateSessionId() {
     return 'session_' + Math.random().toString(36).substring(2, 15);
   }
 
-  // Load saved settings
-  const ignoreRobotsToggle = document.getElementById('ignoreRobotsToggle');
-  const websiteInput = document.getElementById('websiteInput');
+  // Handle real-time updates from the server
+  function handleScrapeUpdate(data) {
+    if (data.session_id !== sessionId) return;
 
-  const ignoreRobots = localStorage.getItem('ignoreRobots') === 'true';
-  ignoreRobotsToggle.checked = ignoreRobots;
+    console.log('Scrape update:', data);
 
-  ignoreRobotsToggle.addEventListener('change', () => {
-    localStorage.setItem('ignoreRobots', ignoreRobotsToggle.checked);
-    console.log('Ignore robots.txt setting updated:', ignoreRobotsToggle.checked);
-  });
+    if (data.status === 'crawling') {
+      uiHandlers.updateStatus(`Scanning: ${data.url}`);
+    } else if (data.status === 'progress') {
+      uiHandlers.updateCounter(`${data.type}Count`, data.count);
+      uiHandlers.addFoundItem(data.type, data.value);
+    }
+  }
 
-  // Function to update button states
+  // Handle scrape completion
+  function handleScrapeComplete(data) {
+    if (data.session_id !== sessionId) return;
+
+    console.log('Scrape complete:', data);
+
+    if (data.status === 'complete') {
+      const inputUrl = getWebsiteInput();
+      const scanResults = loadScanResults();
+      scanResults[inputUrl] = data.data;
+      saveScanResults(scanResults);
+
+      uiHandlers.displayContacts(data.data.structuredContacts);
+      uiHandlers.updateStatus('Scrapy-based scan complete!');
+      uiHandlers.updateDebugInfo(
+        `Scan complete. Found ${data.data.emailCount} emails, ${data.data.phoneCount} phones, and ${data.data.nameCount} names.`
+      );
+    } else if (data.status === 'error') {
+      uiHandlers.showErrorModal(data.message);
+      uiHandlers.updateStatus('Error scanning');
+      uiHandlers.updateDebugInfo(`Error: ${data.message}`);
+    }
+
+    updateButtonStates(false);
+  }
+
+  // Helper to get the website input value
+  function getWebsiteInput() {
+    const websiteInput = document.getElementById('websiteInput');
+    return websiteInput ? websiteInput.value.trim() : '';
+  }
+
+  // Helper to load scan results from localStorage
+  function loadScanResults() {
+    return JSON.parse(localStorage.getItem('scanResults')) || {};
+  }
+
+  // Helper to save scan results to localStorage
+  function saveScanResults(results) {
+    localStorage.setItem('scanResults', JSON.stringify(results));
+  }
+
+  // Update button states
   function updateButtonStates(isScanning) {
     const scanButton = document.getElementById('scanButton');
     const stopButton = document.getElementById('stopButton');
@@ -98,132 +97,87 @@ document.addEventListener('DOMContentLoaded', async function() {
     stopButton.disabled = !isScanning;
     scanButton.classList.toggle('disabled', isScanning);
     stopButton.classList.toggle('disabled', !isScanning);
-    scanButton.style.pointerEvents = isScanning ? 'none' : 'auto';
-    stopButton.style.pointerEvents = isScanning ? 'auto' : 'none';
   }
 
-  // Set initial state: stop button disabled by default
-  updateButtonStates(false);
-
-  // Add stopCrawl flag
-  let stopCrawl = false;
-
-  // Initialize WebSocket
-  initializeSocket();
-
-  // Helper function to call Scrapy spider with WebSocket support
+  // Call the Scrapy spider via the Flask API
   async function callScrapySpider(url) {
     try {
-      // Generate new session ID for this scan
       sessionId = generateSessionId();
-      console.log(`Generated new session ID: ${sessionId}`);
-      
-      // Add a protocol if missing
+      console.log(`Generated session ID: ${sessionId}`);
+
       if (!/^https?:\/\//i.test(url)) {
         url = 'https://' + url;
         console.log(`Added protocol to URL: ${url}`);
       }
-      
-      const response = await fetch(`http://localhost:5000/scrape?url=${encodeURIComponent(url)}&session_id=${sessionId}`);
-      
-      console.log(`API response status: ${response.status}`);
-      
+
+      const response = await fetch(
+        `http://localhost:5000/scrape?url=${encodeURIComponent(url)}&session_id=${sessionId}`
+      );
+
       if (!response.ok) {
         throw new Error(`Scrapy spider returned status ${response.status}`);
       }
-      
+
       const result = await response.json();
-      console.log("Scrape started:", result);
-      
-      return { status: 'started', message: result.message };
+      console.log('Scrape started:', result);
+      return result;
     } catch (error) {
-      console.error("Failed to call Scrapy spider:", error);
+      console.error('Failed to call Scrapy spider:', error);
       throw error;
     }
   }
 
-  // Initialize socket only once
-  if (!socket) {
-    initializeSocket();
+  // Event handler for the scan button
+  async function handleScanButtonClick() {
+    const inputUrl = getWebsiteInput();
+    if (!inputUrl) {
+      alert('Please enter a website address.');
+      return;
+    }
+
+    console.log(`Starting scan for: ${inputUrl}`);
+
+    uiHandlers.clearContacts();
+    uiHandlers.updateCounter('emailCount', 0);
+    uiHandlers.updateCounter('phoneCount', 0);
+    uiHandlers.updateCounter('nameCount', 0);
+
+    if (!socket || !socket.connected) {
+      console.log('Socket not connected, reinitializing...');
+      initializeSocket();
+    }
+
+    updateButtonStates(true);
+    uiHandlers.updateStatus('Starting scan...');
+    uiHandlers.updateDebugInfo(`Starting scan of ${inputUrl}`);
+
+    try {
+      await callScrapySpider(inputUrl);
+      console.log('Scan initiated successfully');
+    } catch (error) {
+      console.error('Error starting scan:', error);
+      uiHandlers.showErrorModal(error.message || 'Failed to start scan');
+      uiHandlers.updateStatus('Error scanning');
+      uiHandlers.updateDebugInfo(`Error: ${error.message || 'Unknown error'}`);
+      updateButtonStates(false);
+    }
   }
 
-  // Scan button click event - moved outside any function to ensure it's registered only once
-  const scanButton = document.getElementById('scanButton');
-  if (!scanButton) {
-    console.error("Scan button not found in the DOM!");
-  } else {
-    // Remove any existing listeners to prevent duplicates
-    scanButton.replaceWith(scanButton.cloneNode(true));
-    
-    // Get the fresh button reference
-    const freshScanButton = document.getElementById('scanButton');
-    
-    freshScanButton.addEventListener('click', async function() {
-      console.log("Scan button clicked");
-      
-      const inputUrl = websiteInput.value.trim();
-      if (!inputUrl) {
-        alert("Please enter a website address.");
-        return;
-      }
-      
-      console.log(`Starting scan for: ${inputUrl}`);
-      
-      // Reset UI for new scan
-      uiHandlers.clearContacts();
-      uiHandlers.updateCounter('emailCount', 0);
-      uiHandlers.updateCounter('phoneCount', 0);
-      uiHandlers.updateCounter('nameCount', 0);
-      
-      // Make sure WebSocket is connected
-      if (!socket || !socket.connected) {
-        console.log("Socket not connected, reinitializing...");
-        initializeSocket();
-      }
-      
-      updateButtonStates(true);
-      uiHandlers.updateStatus('Starting scan...');
-      uiHandlers.updateDebugInfo(`Starting scan of ${inputUrl}`);
-      
-      // Reset stopCrawl flag
-      stopCrawl = false;
-
-      try {
-        // Call Scrapy spider - this now returns immediately while updates come via WebSocket
-        const result = await callScrapySpider(inputUrl);
-        console.log("Scan initiated successfully:", result);
-        uiHandlers.updateStatus(`Scanning in progress: ${inputUrl}`);
-      } catch (error) {
-        console.error("Error starting scan:", error);
-        uiHandlers.showErrorModal(error.message || "Failed to start scan");
-        uiHandlers.updateStatus('Error scanning');
-        uiHandlers.updateDebugInfo(`Error: ${error.message || "Unknown error"}`);
-        updateButtonStates(false);
-      }
-    });
-    
-    console.log("Scan button event listener attached");
-  }
-
-  // Stop button click event
-  const stopButton = document.getElementById('stopButton');
-  stopButton.addEventListener('click', async function() {
+  // Event handler for the stop button
+  async function handleStopButtonClick() {
     console.log('Stop button clicked');
     uiHandlers.updateStatus('Stopping scan...');
-    
-    // Send cancel request to server
+
     try {
       const response = await fetch('http://localhost:5000/cancel-scrape', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId }),
       });
-      
+
       const result = await response.json();
-      console.log("Cancel result:", result);
-      
+      console.log('Cancel result:', result);
+
       if (result.status === 'cancelled') {
         uiHandlers.updateStatus('Scan cancelled');
         uiHandlers.updateDebugInfo('Scan cancelled by user');
@@ -232,44 +186,34 @@ document.addEventListener('DOMContentLoaded', async function() {
         uiHandlers.updateDebugInfo(`Failed to cancel: ${result.message}`);
       }
     } catch (error) {
-      console.error("Error cancelling scan:", error);
+      console.error('Error cancelling scan:', error);
       uiHandlers.updateDebugInfo(`Error cancelling scan: ${error.message}`);
     }
-    
-    // Set stopCrawl to true
-    stopCrawl = true;
-    updateButtonStates(false);
-  });
 
-  // Clear button click event
-  const clearButton = document.getElementById('clearButton');
-  clearButton.addEventListener('click', () => {
+    updateButtonStates(false);
+  }
+
+  // Event handler for the clear button
+  function handleClearButtonClick() {
     uiHandlers.clearContacts();
     localStorage.removeItem('scanResults');
     uiHandlers.updateStatus('Cleared contacts and cache.');
-  });
+  }
 
-  // Export button click event
-  const exportButton = document.getElementById('exportButton');
-  exportButton.addEventListener('click', exportContacts);
+  // Event handler for the export button
+  function handleExportButtonClick() {
+    const inputUrl = getWebsiteInput();
+    if (!inputUrl) return;
 
-  // Load saved contacts
-  loadSavedContacts();
-
-  // Export contacts function
-  function exportContacts() {
-    const currentUrl = websiteInput.value.trim();
-    if (!currentUrl) return;
-
-    const results = JSON.parse(localStorage.getItem('scanResults')) || {};
-    const pageResults = results[currentUrl];
+    const scanResults = loadScanResults();
+    const pageResults = scanResults[inputUrl];
     if (!pageResults || !pageResults.structuredContacts || pageResults.structuredContacts.length === 0) {
       alert('No contacts to export!');
       return;
     }
 
-    let csvContent = "data:text/csv;charset=utf-8,Name,Phone,Email\n";
-    pageResults.structuredContacts.forEach(contact => {
+    let csvContent = 'data:text/csv;charset=utf-8,Name,Phone,Email\n';
+    pageResults.structuredContacts.forEach((contact) => {
       csvContent += `"${contact.name || ''}","${contact.phone || ''}","${contact.email || ''}"\n`;
     });
 
@@ -282,30 +226,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.body.removeChild(link);
   }
 
-  // Load saved contacts function
-  function loadSavedContacts() {
-    const currentUrl = websiteInput.value.trim();
-    if (!currentUrl) return;
-    const results = JSON.parse(localStorage.getItem('scanResults')) || {};
-    const pageResults = results[currentUrl];
-    if (pageResults && pageResults.structuredContacts) {
-      uiHandlers.displayContacts(pageResults.structuredContacts);
+  // Attach event listeners to buttons
+  document.getElementById('scanButton').addEventListener('click', handleScanButtonClick);
+  document.getElementById('stopButton').addEventListener('click', handleStopButtonClick);
+  document.getElementById('clearButton').addEventListener('click', handleClearButtonClick);
+  document.getElementById('exportButton').addEventListener('click', handleExportButtonClick);
 
-      if (pageResults.rawContacts) {
-        uiHandlers.updateCounter('emailCount', pageResults.rawContacts.emails?.length || 0);
-        uiHandlers.updateCounter('phoneCount', pageResults.rawContacts.phones?.length || 0);
-        uiHandlers.updateCounter('nameCount', pageResults.rawContacts.names?.length || 0);
-      } else {
-        const emailsCount = pageResults.structuredContacts.filter(c => c.email).length;
-        const phonesCount = pageResults.structuredContacts.filter(c => c.phone).length;
-        const namesCount = pageResults.structuredContacts.filter(c => c.name).length;
-
-        uiHandlers.updateCounter('emailCount', emailsCount);
-        uiHandlers.updateCounter('phoneCount', phonesCount);
-        uiHandlers.updateCounter('nameCount', namesCount);
-      }
-    } else {
-      uiHandlers.clearContacts();
-    }
-  }
+  // Initialize WebSocket
+  initializeSocket();
 });
