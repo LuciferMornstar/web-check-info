@@ -108,7 +108,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   // Clear button click event
-  document.getElementById('clearButton').addEventListener('click', uiHandlers.clearContacts);
+  document.getElementById('clearButton').addEventListener('click', () => {
+    uiHandlers.clearContacts();
+    // Clear local storage as well
+    localStorage.removeItem('scanResults');
+    uiHandlers.updateStatus('Cleared contacts and cache.');
+  });
 
   // Export button click event
   document.getElementById('exportButton').addEventListener('click', exportContacts);
